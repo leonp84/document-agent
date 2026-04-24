@@ -332,10 +332,13 @@ Total budget: ~100–150 hours across 8–12 weeks.
 **What it's doing:** Securing all test data before any LLM call exists.
 
 **What it requires:**
-- Write synthetic invoice generator: parameterised by industry, generates known-good and known-bad invoices with ground truth JSON. Output covers all three industries with realistic Austrian names, amounts, and service descriptions.
+- Build a minimal Jinja2 invoice template (simplified Phase 8 precursor) — enough to render a valid A4 PDF with all 11 §11 UStG fields. Used only for gold set generation; the polished template comes in Phase 8.
+- Write `scripts/generate_gold_set.py`: parameterised by industry, company, line items, amounts. Produces 15 PDFs (5 per industry) in `evals/gold/` with a matching `ground_truth.json` per file. Also generates adversarial variants: missing UID, malformed VAT, long service descriptions.
+- Write `scripts/generate_test_invoices.py`: larger synthetic set (50+) of known-good and known-bad invoices for eval harness. Covers edge cases and all three industries.
 - Populate `data/clients.json` with 8–10 synthetic Austrian companies (varied industries, realistic addresses, UID numbers in correct format).
-- Curate a small gold set: 10–15 real Austrian invoices (redacted personal data) as sanity anchor.
-- 30-minute spike: confirm WeasyPrint renders A4 correctly on Windows + test `pdfplumber` on gold set PDFs.
+- 30-minute spike: confirm WeasyPrint renders A4 correctly on Windows; pick PDF parsing library (`pdfplumber` recommended) and confirm it can round-trip the generated PDFs.
+
+Note: no real client invoices used. Synthetic gold set from our own template gives exact ground truth and avoids all privacy concerns.
 
 **Deliverable:** `data/` and `evals/` directories fully populated. Synthetic generator runnable via `python scripts/generate_test_invoices.py`.
 
