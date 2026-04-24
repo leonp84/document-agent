@@ -8,7 +8,7 @@ DocAssist is a Quote & Invoice Generator for small Austrian businesses (under 10
 
 **The problem:** An Austrian SME owner — carpenter, IT consultant, business advisor — spends 30–60 unbillable minutes on every quote and invoice. They open a Word template, type line items, calculate totals, check formatting, add bank details. If they make an error, their client cannot reclaim VAT. They do this for every job, every week, for years.
 
-**The user:** Austrian sole trader or micro-business owner (under 10 employees), no accounting software. Operates in one of three pilot industries: IT services / Softwareentwicklung, Handwerk / Tischler, Unternehmensberatung.
+**The user:** Austrian sole trader or micro-business owner (under 10 employees), no accounting software. Operates in one of three pilot industries: Reinigung / Gebäudereinigung, Handwerk / Tischler, Unternehmensberatung.
 
 **What solved looks like:**
 - Quote generated from a plain-text or spoken job description in under 30 seconds
@@ -23,7 +23,7 @@ DocAssist is a Quote & Invoice Generator for small Austrian businesses (under 10
 
 All locked before building begins.
 
-**Industries in scope:** IT services / Softwareentwicklung, Handwerk / Tischler, Unternehmensberatung. These three cover the three dominant invoice shapes in Austrian SME land: hourly-rate service, labour-plus-materials trade, day-rate consulting.
+**Industries in scope:** Reinigung / Gebäudereinigung, Handwerk / Tischler, Unternehmensberatung. These three cover the three dominant invoice shapes in Austrian SME land: hourly-rate service, labour-plus-materials trade, day-rate consulting.
 
 **Input:** Plain text typed or spoken by the owner. Examples:
 - `"Rechnung an Müller GmbH, 16 Stunden à 65 Euro, Material 840 Euro"` → rates in input, extracted directly

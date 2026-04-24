@@ -9,14 +9,14 @@ Minimum per file: 8 pairs covering the scenario types below.
 
 ```json
 {
-  "id": "it_001",
-  "industry": "IT",
+  "id": "cl_001",
+  "industry": "Reinigung",
   "scenario": "rates_explicit",
   "input": "raw job description text — EN or DE, as the owner would type it",
   "expected_scope": {
-    "client_ref": "Weber IT Solutions",
+    "client_ref": "Saubermann GmbH",
     "services": [
-      {"description": "Webentwicklung", "quantity": 32, "unit": "Stunden", "rate": 90.00}
+      {"description": "Büroreinigung", "quantity": 12, "unit": "Stunden", "rate": 22.00}
     ],
     "vat_rate": 0.20,
     "language": "de",
@@ -24,11 +24,11 @@ Minimum per file: 8 pairs covering the scenario types below.
   },
   "expected_quote": {
     "line_items": [
-      {"description": "Webentwicklung", "qty": 32, "unit": "Stunden", "rate": 90.00, "amount": 2880.00}
+      {"description": "Büroreinigung", "qty": 12, "unit": "Stunden", "rate": 22.00, "amount": 264.00}
     ],
-    "net_total": 2880.00,
-    "vat_amount": 576.00,
-    "gross_total": 3456.00,
+    "net_total": 264.00,
+    "vat_amount": 52.80,
+    "gross_total": 316.80,
     "payment_terms": "Zahlbar innerhalb von 14 Tagen",
     "validity_days": 30
   },
