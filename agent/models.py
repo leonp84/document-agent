@@ -75,3 +75,25 @@ class ResolvedScope(BaseModel):
     unresolved: list[UnresolvedServiceLine]  # need clarification before generation
     vat_rate: float
     language: Literal["de", "en"]
+
+
+# --- Quote ---
+
+class QuoteLineItem(BaseModel):
+    description: str
+    qty: float
+    unit: str
+    rate: float
+    amount: float  # qty * rate, always deterministic
+
+
+class QuoteModel(BaseModel):
+    client: ClientRecord | None
+    client_ref: str
+    line_items: list[QuoteLineItem]
+    net_total: float
+    vat_rate: float
+    vat_amount: float
+    gross_total: float
+    payment_terms: str
+    language: Literal["de", "en"]
