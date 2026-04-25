@@ -1,0 +1,67 @@
+{
+  "qwen2.5-coder-14b": {
+    "tag": "qwen2.5-coder-14b",
+    "label": "Qwen2.5-Coder-14B (MacBook - MLX)",
+    "client_accuracy": 1.0,
+    "service_f1": 0.95,
+    "rate_accuracy": 1.0,
+    "null_rate_precision": 1.0,
+    "low_conf_recall": 1.0,
+    "lang_accuracy": 1.0,
+    "elapsed_s": 217,
+    "pairs_run": 24,
+    "parse_errors": 0
+  },
+  "gemma-4-26b": {
+    "tag": "gemma-4-26b",
+    "label": "gemma-4-26b-a4b-it-mlx (MacBook - MLX)",
+    "client_accuracy": 1.0,
+    "service_f1": 0.91,
+    "rate_accuracy": 1.0,
+    "null_rate_precision": 1.0,
+    "low_conf_recall": 1.0,
+    "lang_accuracy": 1.0,
+    "elapsed_s": 164,
+    "pairs_run": 24,
+    "parse_errors": 0
+  },
+  "gpt-oss-20b": {
+    "tag": "gpt-oss-20b",
+    "label": "gpt-oss-20b (Windows - RX 9060 XT)",
+    "client_accuracy": 1.0,
+    "service_f1": 0.9337530525030525,
+    "rate_accuracy": 1.0,
+    "null_rate_precision": 1.0,
+    "low_conf_recall": 1.0,
+    "lang_accuracy": 1.0,
+    "elapsed_s": 64.25414443016052,
+    "pairs_run": 24,
+    "parse_errors": 0
+  },
+  "claude-haiku": {
+    "tag": "claude-haiku",
+    "label": "claude-haiku-4-5 (Anthropic API)",
+    "client_accuracy": 1.0,
+    "service_f1": 0.9351419413919414,
+    "rate_accuracy": 1.0,
+    "null_rate_precision": 1.0,
+    "low_conf_recall": 1.0,
+    "lang_accuracy": 1.0,
+    "elapsed_s": 34.64668583869934,
+    "pairs_run": 24,
+    "parse_errors": 0
+  },
+  "claude-sonnet": {
+    "tag": "claude-sonnet",
+    "label": "claude-sonnet-4-6 (Anthropic API)",
+    "client_accuracy": 1.0,
+    "service_f1": 0.9375228937728938,
+    "rate_accuracy": 1.0,
+    "null_rate_precision": 1.0,
+    "low_conf_recall": 1.0,
+    "lang_accuracy": 1.0,
+    "elapsed_s": 61.868598222732544,
+    "pairs_run": 24,
+    "parse_errors": 0
+  }
+}

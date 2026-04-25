@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import OpenAI
 from pydantic import ValidationError
 
 from agent.models import ScopeModel, ServiceLine
@@ -21,11 +20,16 @@ def _load_prompt(version: str = "v1") -> str:
     return _PROMPT_CACHE[version]
 
 
-def _build_client() -> OpenAI:
-    return OpenAI(
-        base_url=os.environ.get("LOCAL_LLM_BASE_URL", "http://192.168.1.181:1234/v1"),
-        api_key=os.environ.get("LOCAL_LLM_API_KEY", "local"),
-    )
+def _parse_raw(raw: str) -> ScopeModel:
+    """Strip code fences, parse JSON, validate into ScopeModel."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+    data = json.loads(raw)
+    return ScopeModel.model_validate(data)
 
 
 def _apply_confidence_override(scope: ScopeModel) -> ScopeModel:
@@ -36,47 +40,72 @@ def _apply_confidence_override(scope: ScopeModel) -> ScopeModel:
 
 
 def _fallback(reason: str) -> ScopeModel:
-    """Return a safe low-confidence scope when extraction fails entirely."""
     return ScopeModel(client_ref="", services=[], confidence="low")
+
+
+def _extract_via_openai(system: str, user: str) -> str:
+    """Call an OpenAI-compatible local endpoint and return raw text."""
+    from openai import OpenAI
+
+    disable_thinking = os.environ.get("LLM_DISABLE_THINKING", "").lower() == "true"
+
+    # Models with extended thinking (e.g. Qwen3) consume tokens reasoning before
+    # producing output — 512 is exhausted by the reasoning chain alone.
+    max_tokens = int(os.environ.get("LLM_MAX_TOKENS", "512"))
+
+    kwargs: dict = dict(
+        model=os.environ.get("LOCAL_LLM_MODEL", "gemma-4-26b-a4b-it-mlx"),
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        temperature=0.0,
+        max_tokens=max_tokens,
+    )
+    if disable_thinking:
+        kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+
+    client = OpenAI(
+        base_url=os.environ.get("LOCAL_LLM_BASE_URL", "http://192.168.1.181:1234/v1"),
+        api_key=os.environ.get("LOCAL_LLM_API_KEY", "local"),
+    )
+    response = client.chat.completions.create(**kwargs)
+    return response.choices[0].message.content or ""
+
+
+def _extract_via_anthropic(system: str, user: str) -> str:
+    """Call the Anthropic Messages API and return raw text."""
+    from anthropic import Anthropic
+
+    client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    response = client.messages.create(
+        model=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
+        max_tokens=512,
+        system=system,
+        messages=[{"role": "user", "content": user}],
+        temperature=0.0,
+    )
+    return response.content[0].text
 
 
 def extract_scope(text: str, prompt_version: str = "v3") -> ScopeModel:
     """
     Extract a structured ScopeModel from a plain-text job description.
 
-    Uses the local LLM (OpenAI-compatible API) during development.
-    Swap base_url + api_key env vars for Anthropic SDK in production.
+    Provider is selected via DOCASSIST_PROVIDER env var:
+      - "anthropic" → Anthropic Messages API (ANTHROPIC_MODEL, ANTHROPIC_API_KEY)
+      - anything else → OpenAI-compatible local endpoint (LOCAL_LLM_BASE_URL, LOCAL_LLM_MODEL)
     """
-    prompt = _load_prompt(prompt_version)
-    system_message = prompt
-    user_message = text
+    system = _load_prompt(prompt_version)
+    provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
 
     try:
-        client = _build_client()
-        model = os.environ.get("LOCAL_LLM_MODEL", "gemma-4-26b-a4b-it-mlx")
-
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": user_message},
-            ],
-            temperature=0.0,
-            max_tokens=512,
+        raw = (
+            _extract_via_anthropic(system, text)
+            if provider == "anthropic"
+            else _extract_via_openai(system, text)
         )
-
-        raw = response.choices[0].message.content or ""
-
-        # Strip markdown code fences if model wraps output despite instructions
-        raw = raw.strip()
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-            raw = raw.strip()
-
-        data = json.loads(raw) # string -> dict
-        scope = ScopeModel.model_validate(data) # dict -> object
+        scope = _parse_raw(raw)
         return _apply_confidence_override(scope)
 
     except (json.JSONDecodeError, ValidationError, KeyError):
