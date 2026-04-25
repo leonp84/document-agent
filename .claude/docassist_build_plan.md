@@ -342,7 +342,7 @@ Note: no real client invoices used. Synthetic gold set from our own template giv
 
 **Deliverable:** `data/` and `evals/` directories fully populated. Synthetic generator runnable via `python scripts/generate_test_invoices.py`.
 
-**Time:** 6–10 hours.
+**Time:** 6–10 hours. - /res
 
 ---
 
@@ -414,12 +414,13 @@ Note: no real client invoices used. Synthetic gold set from our own template giv
 **What it's doing:** Deterministic §11 UStG compliance layer.
 
 **What it requires:**
+- Before coding: download the ebInterface 6.1 XSD from [erechnung.gv.at](https://www.erechnung.gv.at/erb/en_GB/tec_formats_ebinterface) and cross-check all 11 §11 UStG fields against it. The XSD is the authoritative machine-readable definition of required Austrian invoice fields — use it to confirm the field list is complete and the naming is correct before writing any rules.
 - Build `compliance_check(invoice: InvoiceModel) → ComplianceResult` function: checks all 11 §11 UStG fields, returns list of failures with field names.
 - Build `InvoiceModel` Pydantic schema: all 11 required fields, plus bank details, document number.
-- Write `docs/ruleset_rationale.md`: why each field is required, source (§11 UStG subsection).
+- Write `docs/ruleset_rationale.md`: why each field is required, source (§11 UStG subsection), and corresponding ebInterface element name.
 - Full pytest coverage. Evals: synthetic invoice generator's known-bad invoices give direct precision/recall numbers.
 
-**Deliverable:** `compliance_engine.py` with 100% precision on the synthetic test set. Eval numbers committed.
+**Deliverable:** `compliance_engine.py` with 100% precision on the synthetic test set. Eval numbers committed. Field list verified against ebInterface XSD.
 
 **Time:** 5–8 hours.
 

@@ -1,0 +1,317 @@
+[
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_001.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_002.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_003.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_004.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_005.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_006.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_007.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_008.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_009.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/reinigung/valid_010.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_supplier_uid_reinigung.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": false,
+    "defects": [
+      "missing_supplier_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/malformed_supplier_uid_reinigung.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": false,
+    "defects": [
+      "malformed_supplier_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID format invalid (not ATU…)"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_invoice_number_reinigung.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": false,
+    "defects": [
+      "missing_invoice_number"
+    ],
+    "violated_field": "§11/1 Z5 — Sequential invoice number missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_service_period_reinigung.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": false,
+    "defects": [
+      "missing_service_period"
+    ],
+    "violated_field": "§11/1 Z7 — Service period / Leistungsdatum missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/vat_arithmetic_error_reinigung.pdf",
+    "industry": "Reinigung",
+    "compliance_expected": false,
+    "defects": [
+      "vat_arithmetic_error"
+    ],
+    "violated_field": "§11/1 Z11 — VAT amount does not match net × rate"
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_001.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_002.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_003.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_004.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_005.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_006.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_007.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_008.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_009.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/handwerk/valid_010.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_supplier_uid_handwerk.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": false,
+    "defects": [
+      "missing_supplier_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/malformed_supplier_uid_handwerk.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": false,
+    "defects": [
+      "malformed_supplier_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID format invalid (not ATU…)"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_invoice_number_handwerk.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": false,
+    "defects": [
+      "missing_invoice_number"
+    ],
+    "violated_field": "§11/1 Z5 — Sequential invoice number missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_service_period_handwerk.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": false,
+    "defects": [
+      "missing_service_period"
+    ],
+    "violated_field": "§11/1 Z7 — Service period / Leistungsdatum missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/vat_arithmetic_error_handwerk.pdf",
+    "industry": "Handwerk",
+    "compliance_expected": false,
+    "defects": [
+      "vat_arithmetic_error"
+    ],
+    "violated_field": "§11/1 Z11 — VAT amount does not match net × rate"
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_001.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_002.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_003.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_004.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_005.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_006.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_007.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_008.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_009.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/beratung/valid_010.pdf",
+    "industry": "Beratung",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_supplier_uid_beratung.pdf",
+    "industry": "Beratung",
+    "compliance_expected": false,
+    "defects": [
+      "missing_supplier_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/malformed_supplier_uid_beratung.pdf",
+    "industry": "Beratung",
+    "compliance_expected": false,
+    "defects": [
+      "malformed_supplier_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID format invalid (not ATU…)"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_invoice_number_beratung.pdf",
+    "industry": "Beratung",
+    "compliance_expected": false,
+    "defects": [
+      "missing_invoice_number"
+    ],
+    "violated_field": "§11/1 Z5 — Sequential invoice number missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/missing_service_period_beratung.pdf",
+    "industry": "Beratung",
+    "compliance_expected": false,
+    "defects": [
+      "missing_service_period"
+    ],
+    "violated_field": "§11/1 Z7 — Service period / Leistungsdatum missing"
+  },
+  {
+    "pdf": "evals/test_invoices/adversarial/vat_arithmetic_error_beratung.pdf",
+    "industry": "Beratung",
+    "compliance_expected": false,
+    "defects": [
+      "vat_arithmetic_error"
+    ],
+    "violated_field": "§11/1 Z11 — VAT amount does not match net × rate"
+  }
+]

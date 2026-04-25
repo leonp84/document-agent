@@ -1,0 +1,258 @@
+[
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_001.pdf",
+    "id": "bt_001",
+    "industry": "Beratung",
+    "scenario": "rates_explicit",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_002.pdf",
+    "id": "bt_002",
+    "industry": "Beratung",
+    "scenario": "rates_missing",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_003.pdf",
+    "id": "bt_003",
+    "industry": "Beratung",
+    "scenario": "multi_service",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_004.pdf",
+    "id": "bt_004",
+    "industry": "Beratung",
+    "scenario": "english_input",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_006.pdf",
+    "id": "bt_006",
+    "industry": "Beratung",
+    "scenario": "rates_partial",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_007.pdf",
+    "id": "bt_007",
+    "industry": "Beratung",
+    "scenario": "client_partial",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/beratung/bt_008.pdf",
+    "id": "bt_008",
+    "industry": "Beratung",
+    "scenario": "edge_materials",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/beratung_missing_uid.pdf",
+    "id": "beratung_missing_uid",
+    "industry": "Beratung",
+    "scenario": "adversarial",
+    "compliance_expected": false,
+    "defects": [
+      "missing_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID missing"
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/beratung_malformed_vat.pdf",
+    "id": "beratung_malformed_vat",
+    "industry": "Beratung",
+    "scenario": "adversarial",
+    "compliance_expected": false,
+    "defects": [
+      "malformed_vat"
+    ],
+    "violated_field": "§11/1 Z11 — VAT amount does not match net × rate"
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/beratung_long_description.pdf",
+    "id": "beratung_long_description",
+    "industry": "Beratung",
+    "scenario": "adversarial",
+    "compliance_expected": true,
+    "defects": [
+      "long_description"
+    ]
+  },
+  {
+    "pdf": "evals/gold/pdfs/handwerk/hw_001.pdf",
+    "id": "hw_001",
+    "industry": "Handwerk",
+    "scenario": "rates_explicit",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/handwerk/hw_003.pdf",
+    "id": "hw_003",
+    "industry": "Handwerk",
+    "scenario": "rates_missing",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/handwerk/hw_004.pdf",
+    "id": "hw_004",
+    "industry": "Handwerk",
+    "scenario": "rates_explicit",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/handwerk/hw_005.pdf",
+    "id": "hw_005",
+    "industry": "Handwerk",
+    "scenario": "client_partial",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/handwerk/hw_006.pdf",
+    "id": "hw_006",
+    "industry": "Handwerk",
+    "scenario": "rates_partial",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/handwerk/hw_007.pdf",
+    "id": "hw_007",
+    "industry": "Handwerk",
+    "scenario": "multi_service",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/handwerk_missing_uid.pdf",
+    "id": "handwerk_missing_uid",
+    "industry": "Handwerk",
+    "scenario": "adversarial",
+    "compliance_expected": false,
+    "defects": [
+      "missing_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID missing"
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/handwerk_malformed_vat.pdf",
+    "id": "handwerk_malformed_vat",
+    "industry": "Handwerk",
+    "scenario": "adversarial",
+    "compliance_expected": false,
+    "defects": [
+      "malformed_vat"
+    ],
+    "violated_field": "§11/1 Z11 — VAT amount does not match net × rate"
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/handwerk_long_description.pdf",
+    "id": "handwerk_long_description",
+    "industry": "Handwerk",
+    "scenario": "adversarial",
+    "compliance_expected": true,
+    "defects": [
+      "long_description"
+    ]
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_001.pdf",
+    "id": "cl_001",
+    "industry": "Reinigung",
+    "scenario": "rates_explicit",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_002.pdf",
+    "id": "cl_002",
+    "industry": "Reinigung",
+    "scenario": "rates_missing",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_003.pdf",
+    "id": "cl_003",
+    "industry": "Reinigung",
+    "scenario": "english_input",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_005.pdf",
+    "id": "cl_005",
+    "industry": "Reinigung",
+    "scenario": "multi_service",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_006.pdf",
+    "id": "cl_006",
+    "industry": "Reinigung",
+    "scenario": "rates_partial",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_007.pdf",
+    "id": "cl_007",
+    "industry": "Reinigung",
+    "scenario": "client_partial",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/reinigung/cl_008.pdf",
+    "id": "cl_008",
+    "industry": "Reinigung",
+    "scenario": "edge_materials",
+    "compliance_expected": true,
+    "defects": []
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/reinigung_missing_uid.pdf",
+    "id": "reinigung_missing_uid",
+    "industry": "Reinigung",
+    "scenario": "adversarial",
+    "compliance_expected": false,
+    "defects": [
+      "missing_uid"
+    ],
+    "violated_field": "§11/1 Z3 — Supplier UID missing"
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/reinigung_malformed_vat.pdf",
+    "id": "reinigung_malformed_vat",
+    "industry": "Reinigung",
+    "scenario": "adversarial",
+    "compliance_expected": false,
+    "defects": [
+      "malformed_vat"
+    ],
+    "violated_field": "§11/1 Z11 — VAT amount does not match net × rate"
+  },
+  {
+    "pdf": "evals/gold/pdfs/adversarial/reinigung_long_description.pdf",
+    "id": "reinigung_long_description",
+    "industry": "Reinigung",
+    "scenario": "adversarial",
+    "compliance_expected": true,
+    "defects": [
+      "long_description"
+    ]
+  }
+]

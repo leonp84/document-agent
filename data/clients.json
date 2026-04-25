@@ -1,0 +1,92 @@
+[
+  {
+    "id": "client_001",
+    "name": "Saubermann GmbH",
+    "short_names": ["Saubermann"],
+    "address_line1": "Mariahilfer Straße 42",
+    "address_line2": "1060 Wien",
+    "uid": "ATU12345678",
+    "email": "office@saubermann.at"
+  },
+  {
+    "id": "client_002",
+    "name": "Muster Immobilien GmbH",
+    "short_names": ["Muster Immobilien"],
+    "address_line1": "Schillerplatz 5",
+    "address_line2": "8010 Graz",
+    "uid": "ATU23456789",
+    "email": "verwaltung@muster-immobilien.at"
+  },
+  {
+    "id": "client_003",
+    "name": "Vienna Office Park GmbH",
+    "short_names": ["Vienna Office Park", "VOP"],
+    "address_line1": "Erdbergstraße 200",
+    "address_line2": "1030 Wien",
+    "uid": "ATU34567890",
+    "email": "facility@vop.at"
+  },
+  {
+    "id": "client_004",
+    "name": "Alpenglanz Verwaltung KG",
+    "short_names": ["Alpenglanz"],
+    "address_line1": "Bahnhofstraße 12",
+    "address_line2": "5020 Salzburg",
+    "uid": "ATU45678901",
+    "email": "buero@alpenglanz.at"
+  },
+  {
+    "id": "client_005",
+    "name": "Pichler Logistik GmbH",
+    "short_names": ["Pichler Logistik", "Pichler"],
+    "address_line1": "Industriestraße 7",
+    "address_line2": "2345 Brunn am Gebirge",
+    "uid": "ATU56789012",
+    "email": "buchhaltung@pichler-logistik.at"
+  },
+  {
+    "id": "client_006",
+    "name": "Familie Gruber",
+    "short_names": ["Gruber"],
+    "address_line1": "Dorfstraße 3",
+    "address_line2": "4814 Neukirchen an der Vöckla",
+    "uid": null,
+    "email": null
+  },
+  {
+    "id": "client_007",
+    "name": "Alpin Holzbau GmbH",
+    "short_names": ["Alpin Holzbau", "Alpin"],
+    "address_line1": "Gewerbepark 15",
+    "address_line2": "6330 Kufstein",
+    "uid": "ATU67890123",
+    "email": "office@alpin-holzbau.at"
+  },
+  {
+    "id": "client_008",
+    "name": "Bergkraft GmbH",
+    "short_names": ["Bergkraft"],
+    "address_line1": "Franz-Josefs-Kai 21",
+    "address_line2": "1010 Wien",
+    "uid": "ATU78901234",
+    "email": "sekretariat@bergkraft.at"
+  },
+  {
+    "id": "client_009",
+    "name": "Stadler Consulting OG",
+    "short_names": ["Stadler"],
+    "address_line1": "Landstraßer Hauptstraße 60",
+    "address_line2": "1030 Wien",
+    "uid": "ATU89012345",
+    "email": "office@stadler-consulting.at"
+  },
+  {
+    "id": "client_010",
+    "name": "Kern Holding GmbH",
+    "short_names": ["Kern Holding", "Kern"],
+    "address_line1": "Schwarzenbergplatz 16",
+    "address_line2": "1010 Wien",
+    "uid": "ATU90123456",
+    "email": "holding@kern.at"
+  }
+]

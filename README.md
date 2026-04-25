@@ -6,7 +6,7 @@
 
 ## The Problem
 
-An Austrian SME owner — carpenter, IT consultant, business advisor — spends 30–60 unbillable minutes on every quote and invoice. They open a Word template, type line items, calculate totals, add bank details, check the layout. They do this for every job, every week.
+An Austrian SME owner without ERP or accounting software — carpenter, cleanner, business advisor — spends ca. 15-30 unbillable minutes on every quote and invoice. They open a Word template, type line items, calculate totals, add bank details, check the layout. They do this for every job, every week.
 
 The work is not skilled. It is just slow.
 
@@ -89,6 +89,12 @@ See [`docs/eval_results.md`](docs/eval_results.md).
 *To be completed — will include per-node breakdown, cost per document, and user-month estimates at 20 and 100 docs/month.*
 
 See [`docs/cost_latency.md`](docs/cost_latency.md).
+
+---
+
+## Compliance Standard
+
+Invoice field requirements are derived from §11 UStG and cross-referenced against [ebInterface](https://www.erechnung.gv.at/erb/en_GB/tec_formats_ebinterface), the Austrian Chamber of Commerce's XML standard for e-invoices. ebInterface XML export is planned post-MVP.
 
 ---
 

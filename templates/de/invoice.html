@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>{{ doc_type }} {{ invoice_number or '' }}</title>
+<style>
+@page {
+  size: A4;
+  margin: 18mm 20mm 22mm 25mm;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+  color: #1a1a1a;
+  line-height: 1.45;
+}
+
+/* ── Header: supplier (§11/1 Z1 + Z3) + doc meta (Z5 + Z6) ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10mm;
+}
+.supplier-name {
+  font-size: 15pt;
+  font-weight: bold;
+  color: {{ brand_color }};
+  margin-bottom: 2mm;
+}
+.supplier-address {
+  font-size: 8.5pt;
+  color: #555;
+  line-height: 1.7;
+}
+.doc-block { text-align: right; }
+.doc-title {
+  font-size: 22pt;
+  font-weight: bold;
+  color: {{ brand_color }};
+  margin-bottom: 3mm;
+}
+.doc-meta-table { font-size: 9pt; margin-left: auto; }
+.doc-meta-table td:first-child { color: #666; padding-right: 4mm; }
+
+/* ── Recipient (§11/1 Z2 + Z4) ── */
+.recipient { margin: 8mm 0; }
+.recipient-label {
+  font-size: 7.5pt;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5pt;
+  margin-bottom: 2mm;
+}
+.recipient-name { font-weight: bold; font-size: 10.5pt; }
+.recipient-uid { font-size: 8.5pt; color: #555; margin-top: 1mm; }
+
+/* ── Service period (§11/1 Z7) ── */
+.service-period { font-size: 9pt; margin: 5mm 0; }
+.service-period .label { color: #666; }
+
+/* ── Line items (§11/1 Z8) ── */
+table.items {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6mm;
+  font-size: 9pt;
+}
+table.items thead tr {
+  background-color: {{ brand_color }};
+  color: #fff;
+}
+table.items thead th {
+  padding: 2.5mm 3mm;
+  text-align: left;
+  font-weight: normal;
+}
+table.items thead th.r { text-align: right; }
+table.items tbody td {
+  padding: 2mm 3mm;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: top;
+}
+table.items tbody td.r { text-align: right; white-space: nowrap; }
+table.items tbody tr:nth-child(even) { background: #f9f9f9; }
+
+/* ── Totals (§11/1 Z9 + Z10 + Z11) ── */
+.totals-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 5mm;
+}
+table.totals {
+  width: 78mm;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+}
+table.totals td { padding: 1.5mm 3mm; }
+table.totals td.r { text-align: right; white-space: nowrap; }
+table.totals tr.gross td {
+  font-weight: bold;
+  font-size: 11.5pt;
+  border-top: 2px solid {{ brand_color }};
+  padding-top: 2.5mm;
+}
+
+/* ── Payment ── */
+.payment {
+  margin-top: 9mm;
+  font-size: 9pt;
+}
+.payment .title { font-weight: bold; margin-bottom: 1.5mm; }
+
+/* ── Footer ── */
+.footnote {
+  margin-top: 14mm;
+  padding-top: 3mm;
+  border-top: 1px solid #ddd;
+  font-size: 7.5pt;
+  color: #999;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="supplier-name">{{ supplier.name }}</div>
+    <div class="supplier-address">
+      {{ supplier.address_line1 }}<br>
+      {{ supplier.address_line2 }}<br>
+      {% if supplier.uid %}UID-Nr.: {{ supplier.uid }}{% endif %}
+    </div>
+  </div>
+  <div class="doc-block">
+    <div class="doc-title">{{ doc_type }}</div>
+    <table class="doc-meta-table">
+      {% if invoice_number %}<tr><td>Rechnungsnr.:</td><td><strong>{{ invoice_number }}</strong></td></tr>{% endif %}
+      <tr><td>Datum:</td><td>{{ invoice_date }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="recipient">
+  <div class="recipient-label">Rechnungsempfänger</div>
+  <div class="recipient-name">{{ recipient.name }}</div>
+  <div>{{ recipient.address_line1 }}</div>
+  <div>{{ recipient.address_line2 }}</div>
+  {% if recipient.uid %}<div class="recipient-uid">UID-Nr.: {{ recipient.uid }}</div>{% endif %}
+</div>
+
+{% if service_period %}
+<div class="service-period">
+  <span class="label">Leistungszeitraum: </span>{{ service_period }}
+</div>
+{% endif %}
+
+<table class="items">
+  <thead>
+    <tr>
+      <th>Bezeichnung / Leistung</th>
+      <th class="r">Menge</th>
+      <th>Einheit</th>
+      <th class="r">Einzelpreis</th>
+      <th class="r">Betrag</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in line_items %}
+    <tr>
+      <td>{{ item.description }}</td>
+      <td class="r">{{ item.qty }}</td>
+      <td>{{ item.unit }}</td>
+      <td class="r">{{ item.rate }} €</td>
+      <td class="r">{{ item.amount }} €</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals-wrap">
+  <table class="totals">
+    <tr>
+      <td>Nettobetrag</td>
+      <td class="r">{{ net_total }} €</td>
+    </tr>
+    <tr>
+      <td>{% if vat_rate %}USt. {{ vat_rate }}%{% else %}Umsatzsteuer{% endif %}</td>
+      <td class="r">{{ vat_amount }} €</td>
+    </tr>
+    <tr class="gross">
+      <td>Gesamtbetrag</td>
+      <td class="r">{{ gross_total }} €</td>
+    </tr>
+  </table>
+</div>
+
+<div class="payment">
+  <div class="title">Bankverbindung</div>
+  <div>IBAN: {{ supplier.iban }}</div>
+  <div>BIC: {{ supplier.bic }}</div>
+  <div style="margin-top: 3mm;">{{ payment_terms }}</div>
+</div>
+
+<div class="footnote">
+  {{ supplier.name }} &middot; {{ supplier.address_line1 }}, {{ supplier.address_line2 }}{% if supplier.uid %} &middot; UID: {{ supplier.uid }}{% endif %}
+</div>
+
+</body>
+</html>
