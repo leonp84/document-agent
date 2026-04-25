@@ -367,10 +367,18 @@ Note: no real client invoices used. Synthetic gold set from our own template giv
 **What it's doing:** First real LLM component. First defensible model choice with own numbers.
 
 **Local dev LLM setup:**
-- Model: `gemma-4-26b-a4b-it-mlx` running on LM Studio
-- Endpoint: `http://192.168.1.181:1234/v1` (fixed IP, OpenAI-compatible REST API)
-- Client: `openai` Python SDK with `base_url` pointed at local server, `api_key="local"`
-- Production swap: change `base_url` and `api_key` to Anthropic SDK — no other code changes needed
+
+| | Primary | Alternative |
+|---|---|---|
+| Hardware | MacBook Pro M5 32GB | Windows desktop RX 9060 XT 16GB |
+| Model | `gemma-4-26b-a4b-it-mlx` | `openai/gpt-oss-20b` (MXFP4) |
+| Endpoint | `http://192.168.1.181:1234/v1` | `http://127.0.0.1:1234/v1` |
+| Speed | ~25 tok/sec | ~59 tok/sec |
+| Backend | LM Studio + MLX | LM Studio + RDNA4/Vulkan |
+
+- Client: `openai` Python SDK with `base_url` pointed at active server, `api_key="local"`
+- Switch endpoints via `LOCAL_LLM_BASE_URL` / `LOCAL_LLM_MODEL` in `.env` — no code changes
+- Production swap: change to Anthropic SDK — no other code changes needed
 
 **What it requires:**
 - Design Pydantic schema: `ScopeModel` (client_ref, services[], rates{}, vat_rate, confidence_score, language)

@@ -6,7 +6,6 @@ so individual test modules don't repeat IO or filtering logic.
 """
 import json
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -75,3 +74,25 @@ def gold_pairs_with_quote(gold_pairs) -> list[dict]:
 def gold_pairs_low_confidence(gold_pairs) -> list[dict]:
     """Only pairs where expected_quote is None — clarification branch must fire."""
     return [p for p in gold_pairs if p["expected_quote"] is None]
+
+
+# ── Pre-computed extraction results (one LLM call per pair, cached for session) ──
+
+@pytest.fixture(scope="session")
+def extraction_results(gold_pairs) -> dict[str, object]:
+    """
+    Run extract_scope once per gold pair and cache by pair id.
+    All test functions must use this fixture rather than calling
+    extract_scope() directly — prevents N_tests × N_pairs LLM calls.
+    """
+    try:
+        from agent.extractor import extract_scope
+    except ImportError:
+        return {}
+
+    print(f"\nRunning extraction on {len(gold_pairs)} gold pairs...")
+    results = {}
+    for pair in gold_pairs:
+        results[pair["id"]] = extract_scope(pair["input"])
+        print(f"  {pair['id']}: done")
+    return results
