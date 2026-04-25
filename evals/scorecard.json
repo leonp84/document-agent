@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-04-25T08:52:37.458224+00:00",
+  "generated_at": "2026-04-25T12:05:33.521916+00:00",
   "suite": "all",
-  "wall_seconds": 0.77,
+  "wall_seconds": 65.67,
   "counts": {
-    "passed": 20,
+    "passed": 26,
     "failed": 0,
-    "xfailed": 8,
+    "xfailed": 2,
     "errors": 0,
     "total": 28,
-    "active": 20
+    "active": 26
   },
   "pass_rate": 1.0,
   "status": "green",
-  "note": "8 test(s) xfailed - stub placeholders awaiting real implementation."
+  "note": "2 test(s) xfailed - stub placeholders awaiting real implementation."
 }

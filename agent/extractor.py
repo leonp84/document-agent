@@ -40,7 +40,7 @@ def _fallback(reason: str) -> ScopeModel:
     return ScopeModel(client_ref="", services=[], confidence="low")
 
 
-def extract_scope(text: str, prompt_version: str = "v1") -> ScopeModel:
+def extract_scope(text: str, prompt_version: str = "v3") -> ScopeModel:
     """
     Extract a structured ScopeModel from a plain-text job description.
 
