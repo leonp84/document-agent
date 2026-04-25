@@ -366,14 +366,20 @@ Note: no real client invoices used. Synthetic gold set from our own template giv
 
 **What it's doing:** First real LLM component. First defensible model choice with own numbers.
 
+**Local dev LLM setup:**
+- Model: `gemma-4-26b-a4b-it-mlx` running on LM Studio
+- Endpoint: `http://192.168.1.181:1234/v1` (fixed IP, OpenAI-compatible REST API)
+- Client: `openai` Python SDK with `base_url` pointed at local server, `api_key="local"`
+- Production swap: change `base_url` and `api_key` to Anthropic SDK — no other code changes needed
+
 **What it requires:**
 - Design Pydantic schema: `ScopeModel` (client_ref, services[], rates{}, vat_rate, confidence_score, language)
-- Build extraction with Claude structured output / tool-use. Sonnet first, then Haiku. Record F1 on client extraction and line-item relevance against gold pairs.
+- Build extraction against local Gemma first, then swap to Claude Sonnet/Haiku for production. Record F1 on client extraction and line-item relevance against gold pairs for both — this is the local vs API tradeoff data for Criterion 3.
 - Prompts: `/prompts/scope_extraction/v1.md`. Run eval after each version. Record delta in `CHANGELOG.md`.
-- Implement confidence scoring (simple: ask the model to rate its own confidence 1–5 on extraction completeness; threshold for clarification branch at ≤3).
+- Implement confidence scoring: self-reported by model (confidence: "high"/"low") with deterministic override — force "low" if `services` is empty or `client_ref` is missing, regardless of model's self-report.
 - Implement clarification branch: returns a structured question to the owner rather than proceeding.
 
-**Deliverable:** `extractor` module returning validated `ScopeModel`. Evals show ≥85% F1 on line-item relevance across all three industries. `docs/tradeoffs.md` with Sonnet vs Haiku numbers.
+**Deliverable:** `extractor` module returning validated `ScopeModel`. Evals show ≥85% F1 on line-item relevance across all three industries. `docs/tradeoffs.md` with local Gemma vs Claude Sonnet/Haiku numbers.
 
 **Time:** 15–20 hours.
 
