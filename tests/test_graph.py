@@ -83,6 +83,14 @@ class TestInitialState:
         s = initial_state("test input")
         assert s["raw_input"] == "test input"
 
+    def test_request_id_is_uuid(self):
+        import re
+        s = initial_state("test input")
+        assert re.match(r"^[0-9a-f-]{36}$", s["request_id"])
+
+    def test_each_call_gets_unique_request_id(self):
+        assert initial_state("x")["request_id"] != initial_state("x")["request_id"]
+
     def test_accumulating_fields_are_empty_lists(self):
         s = initial_state("x")
         assert s["clarifications_needed"] == []
@@ -350,12 +358,12 @@ class TestCorrectionLoop:
     def test_correction_called_at_most_twice(self, mock_profile, mock_correction_llm):
         mock_profile.return_value = _make_profile()
         # Correction LLM returns all-null patch (no fix possible) both times
-        mock_correction_llm.return_value = json.dumps({
+        mock_correction_llm.return_value = (json.dumps({
             k: None for k in (
                 "delivery_date", "service_period_from", "service_period_to",
                 "recipient_name", "recipient_address_line1", "recipient_address_line2", "recipient_uid",
             )
-        })
+        }), None, None)
 
         # Build a failing invoice (no delivery date) and run just the compliance sub-graph
         # by testing the router directly at correction_attempts=2

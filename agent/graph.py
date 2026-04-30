@@ -10,6 +10,7 @@ import json
 import operator
 import os
 import time
+import uuid
 from datetime import date
 from pathlib import Path
 from typing import Annotated, Literal
@@ -35,6 +36,7 @@ from agent.models import (
     ResolvedServiceLine,
     ScopeModel,
 )
+from agent.observability import persist_run
 from agent.quote_generator import generate_quote
 from agent.rate_resolver import resolve_rates
 
@@ -123,7 +125,8 @@ def _load_correction_prompt(version: str = "v1") -> str:
     return _correction_prompt_cache[version]
 
 
-def _call_correction_llm(system: str, user: str) -> str:
+def _call_correction_llm(system: str, user: str) -> tuple[str, int | None, int | None]:
+    """Return (text, input_tokens, output_tokens). Tokens are None for local models."""
     provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
     if provider == "anthropic":
         from anthropic import Anthropic
@@ -135,7 +138,7 @@ def _call_correction_llm(system: str, user: str) -> str:
             messages=[{"role": "user", "content": user}],
             temperature=0.0,
         )
-        return resp.content[0].text
+        return resp.content[0].text, resp.usage.input_tokens, resp.usage.output_tokens
     else:
         from openai import OpenAI
         client = OpenAI(
@@ -148,7 +151,12 @@ def _call_correction_llm(system: str, user: str) -> str:
             temperature=0.0,
             max_tokens=256,
         )
-        return resp.choices[0].message.content or ""
+        usage = resp.usage
+        return (
+            resp.choices[0].message.content or "",
+            usage.prompt_tokens if usage else None,
+            usage.completion_tokens if usage else None,
+        )
 
 
 def _parse_correction_patch(raw: str) -> dict:
@@ -181,12 +189,20 @@ def _apply_correction_patch(invoice: InvoiceModel, patch: dict) -> InvoiceModel:
 # Metadata helper
 # ---------------------------------------------------------------------------
 
-def _meta(node: str, start: float, model: str | None = None) -> dict:
+def _meta(
+    node: str,
+    start: float,
+    model: str | None = None,
+    input_tokens: int | None = None,
+    output_tokens: int | None = None,
+) -> dict:
     return {
         "node": node,
         "timestamp": start,
         "latency_ms": round((time.monotonic() - start) * 1000, 1),
         "model": model,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
     }
 
 
@@ -195,6 +211,7 @@ def _meta(node: str, start: float, model: str | None = None) -> dict:
 # ---------------------------------------------------------------------------
 
 class DocAssistState(TypedDict):
+    request_id: str                  # UUID assigned at initial_state(); used as SQLite FK
     raw_input: str
     # Pydantic models serialised as dicts — safe for JSON checkpointing in Phase 9
     scope: dict | None               # ScopeModel
@@ -217,6 +234,7 @@ class DocAssistState(TypedDict):
 def initial_state(raw_input: str) -> DocAssistState:
     """Return a fully initialised state dict for a new run."""
     return DocAssistState(
+        request_id=str(uuid.uuid4()),
         raw_input=raw_input,
         scope=None,
         client=None,
@@ -389,8 +407,15 @@ def node_correct_compliance(state: DocAssistState) -> dict:
         f"Compliance failures to fix:\n{failure_lines}"
     )
 
+    provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
+    model_name = (
+        os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+        if provider == "anthropic"
+        else os.environ.get("LOCAL_LLM_MODEL", "local")
+    )
+    in_tok = out_tok = None
     try:
-        raw = _call_correction_llm(system, user)
+        raw, in_tok, out_tok = _call_correction_llm(system, user)
         patch = _parse_correction_patch(raw)
         patched_invoice = _apply_correction_patch(invoice, patch)
     except Exception:
@@ -399,13 +424,31 @@ def node_correct_compliance(state: DocAssistState) -> dict:
     return {
         "invoice": patched_invoice.model_dump(mode="json"),
         "correction_attempts": state["correction_attempts"] + 1,
-        "per_node_metadata": [_meta("node_correct_compliance", t)],
+        "per_node_metadata": [_meta("node_correct_compliance", t, model_name, in_tok, out_tok)],
     }
 
 
 def node_render_pdf(state: DocAssistState) -> dict:
     """Phase 8 stub — PDF renderer not yet built."""
     return {"pdf_bytes": b""}
+
+
+def node_persist(state: DocAssistState) -> dict:
+    """Write per_node_metadata to SQLite. Failure here must never break the pipeline."""
+    t = time.monotonic()
+    result = state.get("compliance_result")
+    compliance_passed = ComplianceResult.model_validate(result).passed if result else None
+    try:
+        persist_run(
+            request_id=state["request_id"],
+            per_node_metadata=state["per_node_metadata"],
+            industry_type=_get_profile().industry,
+            compliance_passed=compliance_passed,
+            error=state.get("error"),
+        )
+    except Exception:
+        pass
+    return {"per_node_metadata": [_meta("node_persist", t)]}
 
 
 # ---------------------------------------------------------------------------
@@ -457,6 +500,7 @@ def build_graph(checkpointer=None) -> StateGraph:
     builder.add_node("node_check_compliance", node_check_compliance)
     builder.add_node("node_correct_compliance", node_correct_compliance)
     builder.add_node("node_render_pdf", node_render_pdf)
+    builder.add_node("node_persist", node_persist)
 
     builder.add_edge(START, "node_extract")
 
@@ -476,6 +520,7 @@ def build_graph(checkpointer=None) -> StateGraph:
     builder.add_conditional_edges("node_check_compliance", route_after_compliance)
     builder.add_edge("node_correct_compliance", "node_check_compliance")
 
-    builder.add_edge("node_render_pdf", END)
+    builder.add_edge("node_render_pdf", "node_persist")
+    builder.add_edge("node_persist", END)
 
     return builder.compile(checkpointer=checkpointer or MemorySaver())
