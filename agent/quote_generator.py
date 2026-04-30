@@ -20,11 +20,14 @@ def _load_prompt(version: str = "v1") -> str:
     return _PROMPT_CACHE[version]
 
 
-def _build_user_message(scope: ResolvedScope) -> str:
+def _build_user_message(scope: ResolvedScope, rejection_feedback: str | None = None) -> str:
     lines = "\n".join(
         f"{i + 1}. {svc.description}" for i, svc in enumerate(scope.resolved)
     )
-    return f"Input language: {scope.language}\nDescriptions:\n{lines}"
+    msg = f"Input language: {scope.language}\nDescriptions:\n{lines}"
+    if rejection_feedback:
+        msg += f"\n\nPrevious quote was rejected. Owner feedback: {rejection_feedback}"
+    return msg
 
 
 def _parse_llm_response(raw: str, expected_count: int) -> tuple[list[str], str]:
@@ -110,18 +113,20 @@ def _assemble_quote(
 def generate_quote(
     scope: ResolvedScope,
     prompt_version: str = "v1",
+    rejection_feedback: str | None = None,
 ) -> QuoteModel | None:
     """
     Generate a QuoteModel from a fully resolved scope.
 
     Returns None if any service lines remain unresolved (missing rates) or if
     the LLM call fails. Provider selected via DOCASSIST_PROVIDER env var.
+    rejection_feedback is appended to the user message when re-generating after owner rejection.
     """
     if scope.unresolved:
         return None
 
     system = _load_prompt(prompt_version)
-    user = _build_user_message(scope)
+    user = _build_user_message(scope, rejection_feedback)
     provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
 
     try:

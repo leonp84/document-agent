@@ -73,3 +73,17 @@ rate rule, 3 few-shot examples (DE explicit rates, EN missing rate, DE vague/low
 **Run time:** ~66s for 24 pairs
 
 **What changed from v2:** Added "keep description in same language as input — do not translate" rule. Fixed gold set: English-input entries (bt_004, cl_003, hw_004) now have English descriptions in `expected_scope.services` to match the prompt's language-preservation rule.
+
+---
+
+## compliance_correction/v1.md — baseline
+
+**Date:** 2026-04-26
+**Model:** claude-haiku-4-5-20251001
+**Eval:** not yet run — no synthetic compliance-correction test set exists. Eval suite to be added in Phase 9.
+
+**Design decisions:**
+- Returns a fixed seven-field JSON patch; graph merges non-null values into the InvoiceModel.
+- Only the seven fields an LLM can plausibly infer from a job description are correctable. Supplier fields, arithmetic fields, and line items are explicitly out of scope.
+- `delivery_date` failure triggers a branch decision inside the prompt: single-day job → `delivery_date`; range → `service_period_from` + `service_period_to`. This keeps the routing logic in the prompt rather than requiring an extra graph node.
+- Five worked examples cover: single date, monthly period, recipient from text, recipient UID from text, and the cannot-infer case. The cannot-infer example is deliberate — it teaches the model to return null rather than guess.

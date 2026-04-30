@@ -1,0 +1,22 @@
+# Per-node model configuration.
+# Graph nodes read this file and apply provider/model before each LLM call.
+# Change provider to "local" during development, "anthropic" for production.
+
+nodes:
+  extract:
+    provider: anthropic
+    model: claude-haiku-4-5-20251001
+    max_tokens: 512
+    prompt_version: v3
+
+  quote_generate:
+    provider: anthropic
+    model: claude-haiku-4-5-20251001
+    max_tokens: 512
+    prompt_version: v1
+
+  compliance_correct:
+    provider: anthropic
+    model: claude-haiku-4-5-20251001
+    max_tokens: 256
+    prompt_version: v1
