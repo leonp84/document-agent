@@ -7,6 +7,7 @@ __pycache__/
 *.pyo
 *.pyd
 data/
+!data/clients.json
 tests/
 docs/
 evals/

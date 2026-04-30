@@ -7,7 +7,7 @@ const T = {
     headerTagline:   'Österreichischer Rechnungsgenerator',
     subtitle:        'Angebot & Rechnung aus Freitext — §11 UStG-konform',
     inputLabel:      'Auftragsbeschreibung',
-    inputPlaceholder:'z. B. Tischlerarbeit für Maria Huber: Eichentisch, 2 Tage à 8 h, EUR 75/h.',
+    inputPlaceholder:'z. B. Tischlerarbeit für Alpin Holzbau: Eichentisch, 2 Tage à 8 h, EUR 75/h.',
     submitBtn:       'Angebot erstellen',
     profileBtn:      'Firmeninfo bearbeiten',
     freigebenBtn:    'Freigeben & Rechnung erstellen',
@@ -52,7 +52,7 @@ const T = {
     headerTagline:   'Austrian Invoice Generator',
     subtitle:        'Quote & invoice from plain text — §11 UStG compliant',
     inputLabel:      'Job Description',
-    inputPlaceholder:'e.g. Carpentry for Maria Huber: oak table, 2 days at 8 h, EUR 75/h.',
+    inputPlaceholder:'e.g. Carpentry for Alpin Holzbau: oak table, 2 days at 8 h, EUR 75/h.',
     submitBtn:       'Create Quote',
     profileBtn:      'Edit Business Info',
     freigebenBtn:    'Approve & Generate Invoice',
@@ -141,7 +141,7 @@ function applyLang() {
 
   // Placeholder and header tagline aren't data-i18n elements
   rawInput.placeholder = t.inputPlaceholder;
-  document.getElementById('headerTagline').textContent = t.headerTagline;
+  document.getElementById('headerTaglineText').textContent = t.headerTagline;
 
   // Active button state
   langDe.classList.toggle('active', lang === 'de');

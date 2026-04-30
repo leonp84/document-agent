@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DocAssist – Austrian Invoice Generator</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
 </head>
 <body>
   <header>
     <div class="header-left">
-      <h1><img src="at-flag.svg" alt="AT" class="flag" /> DocAssist – <span id="headerTagline"></span></h1>
+      <h1><img src="at-flag.svg" alt="AT" class="flag" /> DocAssist<span id="headerTagline"> – <span id="headerTaglineText"></span></span></h1>
       <p class="subtitle" data-i18n="subtitle"></p>
     </div>
     <div class="lang-switcher">
@@ -51,7 +56,7 @@
 
     <section class="card" id="quoteSection" hidden>
       <h2><span data-i18n="quoteHeading"></span> — <span id="clientName"></span></h2>
-      <table id="quoteTable">
+      <div class="card-scroll"><table id="quoteTable">
         <thead>
           <tr>
             <th data-i18n="colDescription"></th>
@@ -76,7 +81,7 @@
             <td class="num" id="grossTotal"></td>
           </tr>
         </tfoot>
-      </table>
+      </table></div>
       <p class="hint" id="paymentTerms"></p>
       <button id="freigebenBtn" class="primary" data-i18n="freigebenBtn"></button>
     </section>
