@@ -43,8 +43,8 @@ def _fallback(reason: str) -> ScopeModel:
     return ScopeModel(client_ref="", services=[], confidence="low")
 
 
-def _extract_via_openai(system: str, user: str) -> str:
-    """Call an OpenAI-compatible local endpoint and return raw text."""
+def _extract_via_openai(system: str, user: str) -> tuple[str, int | None, int | None]:
+    """Call an OpenAI-compatible local endpoint. Returns (text, in_tokens, out_tokens)."""
     from openai import OpenAI
 
     disable_thinking = os.environ.get("LLM_DISABLE_THINKING", "").lower() == "true"
@@ -70,11 +70,16 @@ def _extract_via_openai(system: str, user: str) -> str:
         api_key=os.environ.get("LOCAL_LLM_API_KEY", "local"),
     )
     response = client.chat.completions.create(**kwargs)
-    return response.choices[0].message.content or ""
+    usage = response.usage
+    return (
+        response.choices[0].message.content or "",
+        usage.prompt_tokens if usage else None,
+        usage.completion_tokens if usage else None,
+    )
 
 
-def _extract_via_anthropic(system: str, user: str) -> str:
-    """Call the Anthropic Messages API and return raw text."""
+def _extract_via_anthropic(system: str, user: str) -> tuple[str, int | None, int | None]:
+    """Call the Anthropic Messages API. Returns (text, in_tokens, out_tokens)."""
     from anthropic import Anthropic
 
     client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -85,12 +90,15 @@ def _extract_via_anthropic(system: str, user: str) -> str:
         messages=[{"role": "user", "content": user}],
         temperature=0.0,
     )
-    return response.content[0].text
+    return response.content[0].text, response.usage.input_tokens, response.usage.output_tokens
 
 
-def extract_scope(text: str, prompt_version: str = "v3") -> ScopeModel:
+def extract_scope(text: str, prompt_version: str = "v3") -> tuple[ScopeModel, int | None, int | None]:
     """
     Extract a structured ScopeModel from a plain-text job description.
+
+    Returns (ScopeModel, in_tokens, out_tokens). Tokens are None on error or local models
+    that don't report usage.
 
     Provider is selected via DOCASSIST_PROVIDER env var:
       - "anthropic" → Anthropic Messages API (ANTHROPIC_MODEL, ANTHROPIC_API_KEY)
@@ -100,15 +108,15 @@ def extract_scope(text: str, prompt_version: str = "v3") -> ScopeModel:
     provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
 
     try:
-        raw = (
+        raw, in_tok, out_tok = (
             _extract_via_anthropic(system, text)
             if provider == "anthropic"
             else _extract_via_openai(system, text)
         )
         scope = _parse_raw(raw)
-        return _apply_confidence_override(scope)
+        return _apply_confidence_override(scope), in_tok, out_tok
 
     except (json.JSONDecodeError, ValidationError, KeyError):
-        return _fallback("parse_error")
+        return _fallback("parse_error"), None, None
     except Exception:
-        return _fallback("llm_error")
+        return _fallback("llm_error"), None, None

@@ -88,5 +88,23 @@
     "address_line2": "1010 Wien",
     "uid": "ATU90123456",
     "email": "holding@kern.at"
+  },
+  {
+    "id": "client_011",
+    "name": "MULTIOSS GmbH",
+    "short_names": ["MULTIOSS", "Multioss"],
+    "address_line1": "Industriezeile 35",
+    "address_line2": "4020 Linz",
+    "uid": "ATU78369445",
+    "email": "info@multioss.com"
+  },
+  {
+    "id": "client_012",
+    "name": "Anton Bruckner International School",
+    "short_names": ["ABIS", "Anton Bruckner International School", "Bruckner School"],
+    "address_line1": "Wildbergstraße 18",
+    "address_line2": "4040 Linz",
+    "uid": "ATU78451006",
+    "email": "office@abis.school"
   }
 ]

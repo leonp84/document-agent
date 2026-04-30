@@ -53,26 +53,43 @@ The human review gate uses LangGraph's `interrupt()` — the graph suspends, per
 
 ## Quickstart
 
-*To be completed post-deployment.*
+Live demo: `https://docassist-86540080152.europe-west3.run.app` (Cloud Run, `europe-west3`). Swagger UI at [`/docs`](https://docassist-86540080152.europe-west3.run.app/docs).
+
+**Simplest path — browser UI:** Open [https://docassist-86540080152.europe-west3.run.app](https://docassist-86540080152.europe-west3.run.app) in a browser, paste your API key into the key field, type a German job description, and click **Angebot erstellen**. Review the quote draft, then click **Freigeben** — the §11 UStG PDF downloads automatically.
+
+**Try it against the live API** (replace `$API_KEY` with the issued key):
 
 ```bash
-# Clone and install
+# 1. Submit a job description — returns a request_id
+curl -s -X POST https://docassist-86540080152.europe-west3.run.app/quote \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"raw_input":"Tischlerarbeit für Maria Huber: Eichentisch, 2 Tage à 8h, EUR 75/h."}'
+
+# 2. Poll status until "awaiting_approval" — surfaces the structured quote draft
+curl -s https://docassist-86540080152.europe-west3.run.app/status/$REQUEST_ID \
+  -H "X-API-Key: $API_KEY"
+
+# 3. Approve to render the §11 UStG-compliant PDF
+curl -s -X POST https://docassist-86540080152.europe-west3.run.app/invoice/$REQUEST_ID \
+  -H "X-API-Key: $API_KEY" -o invoice.pdf
+```
+
+**Run locally:**
+
+```bash
 git clone https://github.com/leonp84/document-agent.git
 cd document-agent
 pip install -r requirements.txt
-cp .env.example .env  # fill in API keys
+cp .env.example .env  # fill in API keys + DOCASSIST_API_KEY
 
-# Configure your business profile
 cp config/business_profile.example.yaml config/business_profile.yaml
 # edit business_profile.yaml with your details
 
-# Run locally
-uvicorn app.main:app --reload
+uvicorn main:app --reload --port 8000
 ```
 
-API available at `http://localhost:8000` — see `/docs` for the Swagger UI.
-
-Live demo: *link to be added post-deployment (Cloud Run, europe-west3)*
+Local API at `http://localhost:8000` — Swagger at `/docs`, health probe at `/health`.
 
 ---
 

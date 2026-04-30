@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocAssist – Austrian Invoice Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1><img src="at-flag.svg" alt="AT" class="flag" /> DocAssist – <span id="headerTagline"></span></h1>
+      <p class="subtitle" data-i18n="subtitle"></p>
+    </div>
+    <div class="lang-switcher">
+      <button id="langDe" class="lang-btn active">DE</button>
+      <button id="langEn" class="lang-btn">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <label for="rawInput" data-i18n="inputLabel"></label>
+      <textarea id="rawInput" rows="5"></textarea>
+      <div class="action-row">
+        <button id="submitBtn" data-i18n="submitBtn"></button>
+        <button id="profileBtn" class="secondary" data-i18n="profileBtn"></button>
+      </div>
+      <button id="clientsToggleBtn" class="clients-toggle" data-i18n="clientsToggle"></button>
+      <div id="clientsPanel" class="clients-panel" hidden>
+        <table id="clientsTable">
+          <thead>
+            <tr>
+              <th data-i18n="clientsColName"></th>
+              <th data-i18n="clientsColAlias"></th>
+            </tr>
+          </thead>
+          <tbody id="clientsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="statusSection" hidden>
+      <p id="statusMsg" class="status-msg"></p>
+      <div class="spinner"></div>
+    </section>
+
+    <section class="card" id="errorSection" hidden>
+      <p id="errorMsg" class="error-msg"></p>
+    </section>
+
+    <section class="card" id="quoteSection" hidden>
+      <h2><span data-i18n="quoteHeading"></span> — <span id="clientName"></span></h2>
+      <table id="quoteTable">
+        <thead>
+          <tr>
+            <th data-i18n="colDescription"></th>
+            <th class="num" data-i18n="colQty"></th>
+            <th data-i18n="colUnit"></th>
+            <th class="num" data-i18n="colUnitPrice"></th>
+            <th class="num" data-i18n="colAmount"></th>
+          </tr>
+        </thead>
+        <tbody id="quoteBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" class="label-cell" data-i18n="labelNet"></td>
+            <td class="num" id="netTotal"></td>
+          </tr>
+          <tr>
+            <td colspan="4" class="label-cell" id="vatLabel"></td>
+            <td class="num" id="vatAmount"></td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="4" class="label-cell" data-i18n="labelGross"></td>
+            <td class="num" id="grossTotal"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="hint" id="paymentTerms"></p>
+      <button id="freigebenBtn" class="primary" data-i18n="freigebenBtn"></button>
+    </section>
+  </main>
+
+  <dialog id="profileModal">
+    <form id="profileForm" method="dialog">
+      <h2 data-i18n="profileTitle"></h2>
+      <div class="form-grid">
+        <label for="pName"     data-i18n="pName"></label>
+        <input id="pName"      type="text" name="name" />
+
+        <label for="pAddr1"    data-i18n="pAddr1"></label>
+        <input id="pAddr1"     type="text" name="address_line1" />
+
+        <label for="pAddr2"    data-i18n="pAddr2"></label>
+        <input id="pAddr2"     type="text" name="address_line2" />
+
+        <label for="pUid"      data-i18n="pUid"></label>
+        <input id="pUid"       type="text" name="uid" />
+
+        <label for="pIban"     data-i18n="pIban"></label>
+        <input id="pIban"      type="text" name="bank_iban" />
+
+        <label for="pBic"      data-i18n="pBic"></label>
+        <input id="pBic"       type="text" name="bank_bic" />
+
+        <label for="pColor"    data-i18n="pColor"></label>
+        <div class="color-row">
+          <input id="pColor"   type="color" name="brand_color" />
+          <input id="pColorHex" type="text" maxlength="7" placeholder="#2C6E49" />
+        </div>
+      </div>
+      <p class="hint" data-i18n="profileHint"></p>
+      <div class="modal-actions">
+        <button type="submit" class="primary" data-i18n="profileSave"></button>
+        <button type="button" id="profileCancel" data-i18n="profileCancel"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

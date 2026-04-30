@@ -76,6 +76,17 @@ rate rule, 3 few-shot examples (DE explicit rates, EN missing rate, DE vague/low
 
 ---
 
+## quote_generation/v2.md
+
+**Date:** 2026-04-30
+**Model:** claude-haiku-4-5-20251001
+
+**What changed from v1:** Strengthened Rule 3 to explicitly target quantity/unit phrases embedded in raw descriptions (e.g. "12 Laufmeter", "48 m²", "6 Stunden à EUR 75/h"). Rule 3 in v1 said "do not include numbers, quantities, rates" but the model kept embedded quantity phrases because they were part of the raw description string it received. Added Example 5 with a realistic multi-line Handwerk input showing the exact strip pattern — the worked example is the primary signal since rule text alone was insufficient. Also strengthened Rule 5 to capture explicit payment terms from the input rather than always defaulting.
+
+**Observed failure in v1:** "Trennwand errichten, 12 Laufmeter inkl. Material" passed through with "12 Laufmeter" intact. Quantity/unit columns already carry that data — redundancy looks unprofessional on the document.
+
+---
+
 ## compliance_correction/v1.md — baseline
 
 **Date:** 2026-04-26

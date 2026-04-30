@@ -507,6 +507,30 @@ Note: no real client invoices used. Synthetic gold set from our own template giv
 
 ---
 
+### Phase 10.5 — Minimal Browser UI
+
+**What it's doing:** Demo-ability for the portfolio piece. Lines 76–88 of this plan describe an owner-facing flow (text input → "Erstelle Angebot…" → draft review → Freigeben → PDF download); Phase 10 ships only the JSON API. Phase 10.5 closes that gap with the thinnest possible web layer — no framework, no separate deploy target.
+
+**What it requires:**
+- Single-page UI served from the existing FastAPI container (Option 1: `app.mount("/", StaticFiles(directory="static", html=True))`). Same Cloud Run service, same URL.
+- `static/index.html` + `static/app.js` (vanilla JS, no build step):
+  - Textarea for `raw_input` and an API-key field (stored in `localStorage`).
+  - "Angebot erstellen" button → `POST /quote`, then poll `GET /status/{id}` every 2s.
+  - On `awaiting_approval`: render the quote JSON as a readable line-item table with subtotal/VAT/total. "Freigeben" button → `POST /invoice/{id}` and trigger PDF download from the response blob.
+  - Error states: surface 401 (bad key), 429 (rate limit), and graph failures from `status.error`.
+- German-first copy (matches the user persona); no i18n framework.
+- Mount order matters: register API routes first, mount static last, so `/quote` etc. don't get shadowed.
+- Update `Dockerfile` to `COPY static/ static/`.
+- Update README quickstart: add "Open the live URL in a browser" as the simplest path; keep the curl flow for developers.
+
+**Out of scope for V1:** registration/login, profile editor, client management UI, microphone input, multi-tenant key issuance — all post-MVP per line 545.
+
+**Deliverable:** Browser-usable demo at the existing Cloud Run URL. End-to-end happy path (paste German job description → review quote → click Freigeben → PDF downloads) works without ever leaving the page.
+
+**Time:** 4–6 hours.
+
+---
+
 ### Phase 11 — Cost & Latency Profiling
 
 **What it's doing:** Criterion 8. The analysis that almost nobody produces.

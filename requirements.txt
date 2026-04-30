@@ -70,3 +70,7 @@ wrapt==2.1.2
 xxhash==3.6.0
 zopfli==0.4.1
 zstandard==0.25.0
+aiofiles==24.1.0
+aiosqlite==0.22.1
+langgraph-checkpoint-sqlite==3.0.3
+sqlite-vec==0.1.9

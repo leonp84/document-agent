@@ -1,0 +1,18 @@
+# Business profile — copy to business_profile.yaml and fill in your details.
+# This file is read once at startup and injected into every generated document.
+
+name: "Glanz & Sauber Reinigung GmbH"
+address_line1: "Hauptstraße 12"
+address_line2: "4020 Linz"
+uid: "ATU98765432"
+logo_path: "assets/logo.png"          # leave blank if no logo
+bank_iban: "AT61 1904 3002 3457 3201"
+bank_bic: "OPSKATWW"
+brand_color: "#2C6E49"                 # hex, used for header and table colours
+language: "de"                         # de | en
+industry: "Reinigung"                  # Reinigung | Handwerk | Beratung
+
+default_rates:
+  labor_hourly: 22          # € per Stunde — used when no rate in input
+  labor_daily: 160          # € per Tag
+  material_markup_pct: 15   # % markup applied to material cost price

@@ -44,7 +44,7 @@ def _parse_llm_response(raw: str, expected_count: int) -> tuple[list[str], str]:
     return descriptions, data["payment_terms"]
 
 
-def _call_openai(system: str, user: str) -> str:
+def _call_openai(system: str, user: str) -> tuple[str, int | None, int | None]:
     from openai import OpenAI
 
     max_tokens = int(os.environ.get("LLM_MAX_TOKENS", "512"))
@@ -61,10 +61,16 @@ def _call_openai(system: str, user: str) -> str:
         base_url=os.environ.get("LOCAL_LLM_BASE_URL", "http://192.168.1.181:1234/v1"),
         api_key=os.environ.get("LOCAL_LLM_API_KEY", "local"),
     )
-    return client.chat.completions.create(**kwargs).choices[0].message.content or ""
+    response = client.chat.completions.create(**kwargs)
+    usage = response.usage
+    return (
+        response.choices[0].message.content or "",
+        usage.prompt_tokens if usage else None,
+        usage.completion_tokens if usage else None,
+    )
 
 
-def _call_anthropic(system: str, user: str) -> str:
+def _call_anthropic(system: str, user: str) -> tuple[str, int | None, int | None]:
     from anthropic import Anthropic
 
     client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -75,7 +81,7 @@ def _call_anthropic(system: str, user: str) -> str:
         messages=[{"role": "user", "content": user}],
         temperature=0.0,
     )
-    return response.content[0].text
+    return response.content[0].text, response.usage.input_tokens, response.usage.output_tokens
 
 
 def _assemble_quote(
@@ -114,30 +120,31 @@ def generate_quote(
     scope: ResolvedScope,
     prompt_version: str = "v1",
     rejection_feedback: str | None = None,
-) -> QuoteModel | None:
+) -> tuple[QuoteModel | None, int | None, int | None]:
     """
     Generate a QuoteModel from a fully resolved scope.
 
-    Returns None if any service lines remain unresolved (missing rates) or if
-    the LLM call fails. Provider selected via DOCASSIST_PROVIDER env var.
+    Returns (QuoteModel | None, in_tokens, out_tokens). Tokens are None on error.
+    Returns (None, None, None) if any service lines remain unresolved (missing rates).
+    Provider selected via DOCASSIST_PROVIDER env var.
     rejection_feedback is appended to the user message when re-generating after owner rejection.
     """
     if scope.unresolved:
-        return None
+        return None, None, None
 
     system = _load_prompt(prompt_version)
     user = _build_user_message(scope, rejection_feedback)
     provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
 
     try:
-        raw = (
+        raw, in_tok, out_tok = (
             _call_anthropic(system, user)
             if provider == "anthropic"
             else _call_openai(system, user)
         )
         descriptions, payment_terms = _parse_llm_response(raw, len(scope.resolved))
-        return _assemble_quote(scope, descriptions, payment_terms)
+        return _assemble_quote(scope, descriptions, payment_terms), in_tok, out_tok
     except (json.JSONDecodeError, ValidationError, KeyError, ValueError):
-        return None
+        return None, None, None
     except Exception:
-        return None
+        return None, None, None

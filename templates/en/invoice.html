@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>{{ doc_type }} {{ invoice_number or '' }}</title>
@@ -130,40 +130,40 @@ table.totals tr.gross td {
     <div class="supplier-address">
       {{ supplier.address_line1 }}<br>
       {{ supplier.address_line2 }}<br>
-      {% if supplier.uid %}UID-Nr.: {{ supplier.uid }}{% endif %}
+      {% if supplier.uid %}VAT No.: {{ supplier.uid }}{% endif %}
     </div>
   </div>
   <div class="doc-block">
     <div class="doc-title">{{ doc_type }}</div>
     <table class="doc-meta-table">
-      {% if invoice_number %}<tr><td>Rechnungsnr.:</td><td><strong>{{ invoice_number }}</strong></td></tr>{% endif %}
-      <tr><td>Datum:</td><td>{{ invoice_date }}</td></tr>
+      {% if invoice_number %}<tr><td>Invoice No.:</td><td><strong>{{ invoice_number }}</strong></td></tr>{% endif %}
+      <tr><td>Date:</td><td>{{ invoice_date }}</td></tr>
     </table>
   </div>
 </div>
 
 <div class="recipient">
-  <div class="recipient-label">Rechnungsempfänger</div>
+  <div class="recipient-label">Bill To</div>
   <div class="recipient-name">{{ recipient.name }}</div>
   <div>{{ recipient.address_line1 }}</div>
   <div>{{ recipient.address_line2 }}</div>
-  {% if recipient.uid %}<div class="recipient-uid">UID-Nr.: {{ recipient.uid }}</div>{% endif %}
+  {% if recipient.uid %}<div class="recipient-uid">VAT No.: {{ recipient.uid }}</div>{% endif %}
 </div>
 
 {% if service_period %}
 <div class="service-period">
-  <span class="label">Leistungszeitraum: </span>{{ service_period }}
+  <span class="label">Service Period: </span>{{ service_period }}
 </div>
 {% endif %}
 
 <table class="items">
   <thead>
     <tr>
-      <th>Bezeichnung / Leistung</th>
-      <th class="r">Menge</th>
-      <th>Einheit</th>
-      <th class="r">Einzelpreis</th>
-      <th class="r">Betrag</th>
+      <th>Description / Service</th>
+      <th class="r">Qty</th>
+      <th>Unit</th>
+      <th class="r">Unit Price</th>
+      <th class="r">Amount</th>
     </tr>
   </thead>
   <tbody>
@@ -182,29 +182,29 @@ table.totals tr.gross td {
 <div class="totals-wrap">
   <table class="totals">
     <tr>
-      <td>Nettobetrag</td>
+      <td>Net Amount</td>
       <td class="r">{{ net_total }} €</td>
     </tr>
     <tr>
-      <td>{% if vat_rate %}USt. {{ vat_rate }}%{% else %}Umsatzsteuer{% endif %}</td>
+      <td>{% if vat_rate %}VAT {{ vat_rate }}%{% else %}VAT{% endif %}</td>
       <td class="r">{{ vat_amount }} €</td>
     </tr>
     <tr class="gross">
-      <td>Gesamtbetrag</td>
+      <td>Total</td>
       <td class="r">{{ gross_total }} €</td>
     </tr>
   </table>
 </div>
 
 <div class="payment">
-  <div class="title">Bankverbindung</div>
+  <div class="title">Payment Details</div>
   <div>IBAN: {{ supplier.iban }}</div>
   <div>BIC: {{ supplier.bic }}</div>
   <div style="margin-top: 3mm;">{{ payment_terms }}</div>
 </div>
 
 <div class="footnote">
-  {{ supplier.name }} &middot; {{ supplier.address_line1 }}, {{ supplier.address_line2 }}{% if supplier.uid %} &middot; UID: {{ supplier.uid }}{% endif %}
+  {{ supplier.name }} &middot; {{ supplier.address_line1 }}, {{ supplier.address_line2 }}{% if supplier.uid %} &middot; VAT: {{ supplier.uid }}{% endif %}
 </div>
 
 </body>

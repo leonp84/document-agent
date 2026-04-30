@@ -213,6 +213,7 @@ def _meta(
 class DocAssistState(TypedDict):
     request_id: str                  # UUID assigned at initial_state(); used as SQLite FK
     raw_input: str
+    language_override: str | None    # "de" | "en" — set by frontend switcher, overrides LLM detection
     # Pydantic models serialised as dicts — safe for JSON checkpointing in Phase 9
     scope: dict | None               # ScopeModel
     client: dict | None              # ClientRecord
@@ -231,11 +232,12 @@ class DocAssistState(TypedDict):
     error: str | None
 
 
-def initial_state(raw_input: str) -> DocAssistState:
+def initial_state(raw_input: str, language_override: str | None = None) -> DocAssistState:
     """Return a fully initialised state dict for a new run."""
     return DocAssistState(
         request_id=str(uuid.uuid4()),
         raw_input=raw_input,
+        language_override=language_override,
         scope=None,
         client=None,
         resolved_scope=None,
@@ -259,10 +261,12 @@ def initial_state(raw_input: str) -> DocAssistState:
 def node_extract(state: DocAssistState) -> dict:
     t = time.monotonic()
     _apply_node_env("extract")
-    scope = extract_scope(state["raw_input"])
+    scope, in_tok, out_tok = extract_scope(state["raw_input"])
+    if state.get("language_override") in ("de", "en"):
+        scope = scope.model_copy(update={"language": state["language_override"]})
     return {
         "scope": scope.model_dump(mode="json"),
-        "per_node_metadata": [_meta("node_extract", t)],
+        "per_node_metadata": [_meta("node_extract", t, input_tokens=in_tok, output_tokens=out_tok)],
     }
 
 
@@ -341,12 +345,12 @@ def node_generate_quote(state: DocAssistState) -> dict:
     t = time.monotonic()
     _apply_node_env("quote_generate")
     rs = ResolvedScope.model_validate(state["resolved_scope"])
-    quote = generate_quote(rs, rejection_feedback=state.get("approval_feedback"))
+    quote, in_tok, out_tok = generate_quote(rs, rejection_feedback=state.get("approval_feedback"))
     return {
         "quote": quote.model_dump(mode="json") if quote else None,
         "approval_status": "pending",
         "approval_feedback": None,
-        "per_node_metadata": [_meta("node_generate_quote", t)],
+        "per_node_metadata": [_meta("node_generate_quote", t, input_tokens=in_tok, output_tokens=out_tok)],
     }
 
 
@@ -428,9 +432,55 @@ def node_correct_compliance(state: DocAssistState) -> dict:
     }
 
 
+def render_pdf(invoice: InvoiceModel, profile: BusinessProfile) -> bytes:
+    """Render an InvoiceModel to PDF bytes using the Jinja2 template for invoice.language."""
+    from jinja2 import Environment, FileSystemLoader
+    from weasyprint import HTML
+
+    template_dir = _ROOT / "templates" / (invoice.language or "de")
+    env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
+    tmpl = env.get_template("invoice.html")
+
+    service_period = None
+    if invoice.service_period_from and invoice.service_period_to:
+        service_period = f"{invoice.service_period_from} – {invoice.service_period_to}"
+    elif invoice.delivery_date:
+        service_period = str(invoice.delivery_date)
+
+    html_str = tmpl.render(
+        doc_type="Rechnung" if invoice.language == "de" else "Invoice",
+        invoice_number=invoice.invoice_number,
+        invoice_date=invoice.invoice_date,
+        supplier={
+            "name": profile.name,
+            "address_line1": profile.address_line1,
+            "address_line2": profile.address_line2,
+            "uid": profile.uid,
+            "iban": profile.bank_iban,
+            "bic": profile.bank_bic,
+        },
+        recipient={
+            "name": invoice.recipient_name,
+            "address_line1": invoice.recipient_address_line1,
+            "address_line2": invoice.recipient_address_line2,
+            "uid": invoice.recipient_uid,
+        },
+        service_period=service_period,
+        line_items=invoice.line_items,
+        net_total=f"{invoice.net_total:.2f}",
+        vat_rate=int(invoice.vat_rate * 100),
+        vat_amount=f"{invoice.vat_amount:.2f}",
+        gross_total=f"{invoice.gross_total:.2f}",
+        payment_terms=invoice.payment_terms,
+        brand_color=profile.brand_color,
+    )
+
+    return HTML(string=html_str, base_url=str(_ROOT)).write_pdf()
+
+
 def node_render_pdf(state: DocAssistState) -> dict:
-    """Phase 8 stub — PDF renderer not yet built."""
-    return {"pdf_bytes": b""}
+    invoice = InvoiceModel.model_validate(state["invoice"])
+    return {"pdf_bytes": render_pdf(invoice, _get_profile())}
 
 
 def node_persist(state: DocAssistState) -> dict:
