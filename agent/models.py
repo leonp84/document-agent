@@ -1,4 +1,5 @@
 """Shared Pydantic models for the DocAssist agent pipeline."""
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel
@@ -97,3 +98,47 @@ class QuoteModel(BaseModel):
     gross_total: float
     payment_terms: str
     language: Literal["de", "en"]
+
+
+# --- Invoice ---
+
+class InvoiceModel(BaseModel):
+    # Carried from QuoteModel
+    client: ClientRecord | None
+    client_ref: str
+    line_items: list[QuoteLineItem]
+    net_total: float
+    vat_rate: float
+    vat_amount: float
+    gross_total: float
+    payment_terms: str
+    language: Literal["de", "en"]
+    # Invoice identity (§11 Abs. 1 Z 5–6 UStG)
+    invoice_number: str
+    invoice_date: date
+    # Delivery / service period (§11 Abs. 1 Z 7 UStG) — one branch must be set
+    delivery_date: date | None = None
+    service_period_from: date | None = None
+    service_period_to: date | None = None
+    # Supplier (§11 Abs. 1 Z 1, 3 UStG) — flattened from BusinessProfile
+    supplier_name: str
+    supplier_address_line1: str
+    supplier_address_line2: str
+    supplier_uid: str
+    # Recipient (§11 Abs. 1 Z 2, 4 UStG) — flattened from ClientRecord
+    recipient_name: str
+    recipient_address_line1: str
+    recipient_address_line2: str
+    recipient_uid: str | None = None
+
+
+# --- Compliance ---
+
+class ComplianceFailure(BaseModel):
+    field: str    # e.g. "invoice_number", "supplier_uid"
+    reason: str   # human-readable; used as correction prompt context in Phase 7
+
+
+class ComplianceResult(BaseModel):
+    passed: bool
+    failures: list[ComplianceFailure]
