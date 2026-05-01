@@ -54,6 +54,15 @@ _PROMPTS_DIR = _ROOT / "prompts"
 _model_cfg: dict = {}
 _profile: BusinessProfile | None = None
 _clients: list[ClientRecord] = []
+_anthropic_client = None
+
+
+def _get_anthropic_client():
+    global _anthropic_client
+    if _anthropic_client is None:
+        from anthropic import Anthropic
+        _anthropic_client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    return _anthropic_client
 
 
 def _get_model_cfg() -> dict:
@@ -86,6 +95,14 @@ def _apply_node_env(node_name: str) -> None:
         os.environ["DOCASSIST_PROVIDER"] = cfg["provider"]
     if "model" in cfg:
         os.environ["ANTHROPIC_MODEL"] = cfg["model"]
+
+
+def _current_model() -> str | None:
+    """Return the active model name after _apply_node_env() has been called."""
+    provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
+    if provider == "anthropic":
+        return os.environ.get("ANTHROPIC_MODEL")
+    return os.environ.get("LOCAL_LLM_MODEL")
 
 
 # ---------------------------------------------------------------------------
@@ -129,8 +146,7 @@ def _call_correction_llm(system: str, user: str) -> tuple[str, int | None, int |
     """Return (text, input_tokens, output_tokens). Tokens are None for local models."""
     provider = os.environ.get("DOCASSIST_PROVIDER", "local").lower()
     if provider == "anthropic":
-        from anthropic import Anthropic
-        client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+        client = _get_anthropic_client()
         resp = client.messages.create(
             model=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
             max_tokens=256,
@@ -214,6 +230,7 @@ class DocAssistState(TypedDict):
     request_id: str                  # UUID assigned at initial_state(); used as SQLite FK
     raw_input: str
     language_override: str | None    # "de" | "en" — set by frontend switcher, overrides LLM detection
+    rate_overrides: dict | None      # e.g. {"labor_hourly": 90.0} — overrides profile default_rates for this run
     # Pydantic models serialised as dicts — safe for JSON checkpointing in Phase 9
     scope: dict | None               # ScopeModel
     client: dict | None              # ClientRecord
@@ -238,6 +255,7 @@ def initial_state(raw_input: str, language_override: str | None = None) -> DocAs
         request_id=str(uuid.uuid4()),
         raw_input=raw_input,
         language_override=language_override,
+        rate_overrides=None,
         scope=None,
         client=None,
         resolved_scope=None,
@@ -266,7 +284,7 @@ def node_extract(state: DocAssistState) -> dict:
         scope = scope.model_copy(update={"language": state["language_override"]})
     return {
         "scope": scope.model_dump(mode="json"),
-        "per_node_metadata": [_meta("node_extract", t, input_tokens=in_tok, output_tokens=out_tok)],
+        "per_node_metadata": [_meta("node_extract", t, _current_model(), in_tok, out_tok)],
     }
 
 
@@ -300,7 +318,16 @@ def node_resolve_rates(state: DocAssistState) -> dict:
     t = time.monotonic()
     scope = ScopeModel.model_validate(state["scope"])
     client = ClientRecord.model_validate(state["client"]) if state["client"] else None
-    rs = resolve_rates(scope, _get_profile(), client)
+    profile = _get_profile()
+    overrides = state.get("rate_overrides") or {}
+    if overrides:
+        valid = {k: float(v) for k, v in overrides.items()
+                 if v is not None and hasattr(profile.default_rates, k)}
+        if valid:
+            profile = profile.model_copy(
+                update={"default_rates": profile.default_rates.model_copy(update=valid)}
+            )
+    rs = resolve_rates(scope, profile, client)
     return {
         "resolved_scope": rs.model_dump(mode="json"),
         "per_node_metadata": [_meta("node_resolve_rates", t)],
@@ -350,7 +377,7 @@ def node_generate_quote(state: DocAssistState) -> dict:
         "quote": quote.model_dump(mode="json") if quote else None,
         "approval_status": "pending",
         "approval_feedback": None,
-        "per_node_metadata": [_meta("node_generate_quote", t, input_tokens=in_tok, output_tokens=out_tok)],
+        "per_node_metadata": [_meta("node_generate_quote", t, _current_model(), in_tok, out_tok)],
     }
 
 
@@ -523,13 +550,82 @@ def route_after_review(state: DocAssistState) -> str:
     return "node_build_invoice" if state["approval_status"] == "approved" else "node_generate_quote"
 
 
+# Fields a user can supply to fix a compliance failure — everything else is a
+# system-level data error that the LLM correction loop already tried to fix.
+_USER_CLARIFIABLE = {"delivery_date", "recipient_uid", "recipient_name_address"}
+
+# Maps a compliance failure field name to one or more user-facing input specs.
+_CLARIFY_FIELD_MAP: dict[str, list[dict]] = {
+    "delivery_date": [
+        {"name": "delivery_date", "input_type": "date"},
+    ],
+    "recipient_uid": [
+        {"name": "recipient_uid", "input_type": "text", "placeholder": "ATU12345678"},
+    ],
+    "recipient_name_address": [
+        {"name": "recipient_name",         "input_type": "text"},
+        {"name": "recipient_address_line1", "input_type": "text"},
+        {"name": "recipient_address_line2", "input_type": "text"},
+    ],
+}
+
+
+def _build_clarify_fields(result: ComplianceResult) -> list[dict]:
+    seen: set[str] = set()
+    fields: list[dict] = []
+    for failure in result.failures:
+        for spec in _CLARIFY_FIELD_MAP.get(failure.field, []):
+            if spec["name"] not in seen:
+                fields.append(spec)
+                seen.add(spec["name"])
+    return fields
+
+
+def node_compliance_clarify(state: DocAssistState) -> dict:
+    """Suspend graph — ask owner for data the LLM correction loop could not supply."""
+    invoice = InvoiceModel.model_validate(state["invoice"])
+    result  = ComplianceResult.model_validate(state["compliance_result"])
+    fields  = _build_clarify_fields(result)
+
+    answer: dict = interrupt({
+        "type": "compliance_clarification",
+        "message": (
+            "The invoice cannot be completed automatically. "
+            "Please provide the missing information:"
+        ),
+        "fields": fields,
+    })
+
+    patch: dict = {}
+    for spec in fields:
+        val = answer.get(spec["name"])
+        if not val:
+            continue
+        if spec["input_type"] == "date":
+            try:
+                patch[spec["name"]] = date.fromisoformat(str(val))
+            except ValueError:
+                pass
+        else:
+            patch[spec["name"]] = str(val).strip()
+
+    patched = invoice.model_copy(update=patch) if patch else invoice
+    return {
+        "invoice": patched.model_dump(mode="json"),
+        "correction_attempts": 0,   # reset so the LLM loop gets two fresh attempts
+        "clarifications_needed": [f"compliance: {[s['name'] for s in fields]}"],
+    }
+
+
 def route_after_compliance(state: DocAssistState) -> str:
     result = ComplianceResult.model_validate(state["compliance_result"])
     if result.passed:
         return "node_render_pdf"
     if state["correction_attempts"] < 2:
         return "node_correct_compliance"
-    return END
+    if any(f.field in _USER_CLARIFIABLE for f in result.failures):
+        return "node_compliance_clarify"
+    return END  # system-level failure the user cannot resolve
 
 
 # ---------------------------------------------------------------------------
@@ -549,6 +645,7 @@ def build_graph(checkpointer=None) -> StateGraph:
     builder.add_node("node_build_invoice", node_build_invoice)
     builder.add_node("node_check_compliance", node_check_compliance)
     builder.add_node("node_correct_compliance", node_correct_compliance)
+    builder.add_node("node_compliance_clarify", node_compliance_clarify)
     builder.add_node("node_render_pdf", node_render_pdf)
     builder.add_node("node_persist", node_persist)
 
@@ -569,6 +666,7 @@ def build_graph(checkpointer=None) -> StateGraph:
     builder.add_edge("node_build_invoice", "node_check_compliance")
     builder.add_conditional_edges("node_check_compliance", route_after_compliance)
     builder.add_edge("node_correct_compliance", "node_check_compliance")
+    builder.add_edge("node_compliance_clarify", "node_check_compliance")
 
     builder.add_edge("node_render_pdf", "node_persist")
     builder.add_edge("node_persist", END)

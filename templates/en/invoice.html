@@ -156,6 +156,7 @@ table.totals tr.gross td {
 </div>
 {% endif %}
 
+{% set UNIT = {"Stunden": "hours", "Tage": "days", "pauschal": "flat rate"} %}
 <table class="items">
   <thead>
     <tr>
@@ -171,7 +172,7 @@ table.totals tr.gross td {
     <tr>
       <td>{{ item.description }}</td>
       <td class="r">{{ "%.2f"|format(item.qty) }}</td>
-      <td>{{ item.unit }}</td>
+      <td>{{ UNIT.get(item.unit, item.unit) }}</td>
       <td class="r">{{ "%.2f"|format(item.rate) }} €</td>
       <td class="r">{{ "%.2f"|format(item.amount) }} €</td>
     </tr>

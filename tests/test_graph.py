@@ -9,6 +9,7 @@ from langgraph.types import Command
 from agent.graph import (
     DocAssistState,
     _apply_correction_patch,
+    _build_clarify_fields,
     _next_invoice_number,
     build_graph,
     initial_state,
@@ -212,11 +213,82 @@ class TestRouteAfterCompliance:
         s = _state(compliance_result=self._result(False, failures), correction_attempts=1)
         assert route_after_compliance(s) == "node_correct_compliance"
 
-    def test_failed_after_two_attempts_routes_to_end(self):
-        from langgraph.graph import END
+    def test_failed_after_two_attempts_clarifiable_routes_to_compliance_clarify(self):
+        # delivery_date is user-clarifiable → compliance clarification interrupt
         failures = [ComplianceFailure(field="delivery_date", reason="missing")]
         s = _state(compliance_result=self._result(False, failures), correction_attempts=2)
+        assert route_after_compliance(s) == "node_compliance_clarify"
+
+    def test_failed_after_two_attempts_non_clarifiable_routes_to_end(self):
+        # vat_amount mismatch is a system-level error the user cannot fix
+        from langgraph.graph import END
+        failures = [ComplianceFailure(field="vat_amount", reason="arithmetic mismatch")]
+        s = _state(compliance_result=self._result(False, failures), correction_attempts=2)
         assert route_after_compliance(s) == END
+
+    def test_mixed_failures_with_one_clarifiable_routes_to_compliance_clarify(self):
+        # If ANY failure is clarifiable we offer the interrupt rather than giving up
+        failures = [
+            ComplianceFailure(field="vat_amount", reason="arithmetic mismatch"),
+            ComplianceFailure(field="delivery_date", reason="missing"),
+        ]
+        s = _state(compliance_result=self._result(False, failures), correction_attempts=2)
+        assert route_after_compliance(s) == "node_compliance_clarify"
+
+
+# ---------------------------------------------------------------------------
+# _build_clarify_fields
+# ---------------------------------------------------------------------------
+
+class TestBuildClarifyFields:
+    def _result(self, *field_names: str) -> ComplianceResult:
+        return ComplianceResult(
+            passed=False,
+            failures=[ComplianceFailure(field=f, reason="test") for f in field_names],
+        )
+
+    def test_delivery_date_produces_date_input(self):
+        fields = _build_clarify_fields(self._result("delivery_date"))
+        assert len(fields) == 1
+        assert fields[0]["name"] == "delivery_date"
+        assert fields[0]["input_type"] == "date"
+
+    def test_recipient_uid_produces_text_input_with_placeholder(self):
+        fields = _build_clarify_fields(self._result("recipient_uid"))
+        assert len(fields) == 1
+        assert fields[0]["name"] == "recipient_uid"
+        assert fields[0]["input_type"] == "text"
+        assert "ATU" in fields[0].get("placeholder", "")
+
+    def test_recipient_name_address_expands_to_three_fields(self):
+        fields = _build_clarify_fields(self._result("recipient_name_address"))
+        names = [f["name"] for f in fields]
+        assert "recipient_name" in names
+        assert "recipient_address_line1" in names
+        assert "recipient_address_line2" in names
+
+    def test_non_clarifiable_failure_produces_no_fields(self):
+        # vat_amount, net_total, line_items etc. are system errors the user can't fix
+        assert _build_clarify_fields(self._result("vat_amount")) == []
+        assert _build_clarify_fields(self._result("invoice_number")) == []
+
+    def test_duplicate_failures_deduplicated(self):
+        # Two failures on the same field → only one input spec
+        result = ComplianceResult(
+            passed=False,
+            failures=[
+                ComplianceFailure(field="delivery_date", reason="a"),
+                ComplianceFailure(field="delivery_date", reason="b"),
+            ],
+        )
+        assert len(_build_clarify_fields(result)) == 1
+
+    def test_mixed_failures_only_clarifiable_fields_returned(self):
+        fields = _build_clarify_fields(self._result("delivery_date", "vat_amount", "recipient_uid"))
+        names = [f["name"] for f in fields]
+        assert "delivery_date" in names
+        assert "recipient_uid" in names
+        assert len(fields) == 2  # vat_amount excluded
 
 
 # ---------------------------------------------------------------------------
@@ -321,28 +393,55 @@ class TestGraphHappyPath:
     @patch("agent.graph._apply_node_env")
     @patch("agent.graph._get_profile")
     @patch("agent.graph._get_clients")
-    @patch("agent.extractor._extract_via_anthropic")
-    @patch("agent.quote_generator._call_anthropic")
+    @patch("agent.graph.extract_scope")
+    @patch("agent.graph.generate_quote")
+    @patch("agent.graph._call_correction_llm")
+    @patch("agent.graph.render_pdf")
     def test_approval_reaches_compliance_check(
-        self, mock_quote_llm, mock_extract_llm, mock_clients, mock_profile, _mock_env
+        self, mock_render, mock_correction_llm, mock_quote, mock_extract, mock_clients, mock_profile, _mock_env
     ):
-        mock_extract_llm.return_value = self._scope_response()
-        mock_quote_llm.return_value = self._quote_response()
+        from agent.models import ScopeModel, QuoteModel
+
+        mock_extract.return_value = (
+            ScopeModel(
+                client_ref="Muster GmbH",
+                services=[],
+                confidence="high",
+                language="de",
+            ),
+            100, 50,
+        )
+        # Quote generator returns a valid QuoteModel (no rejection feedback needed)
+        q = QuoteModel(
+            client=_CLIENT,
+            client_ref="Muster GmbH",
+            line_items=[_LINE],
+            net_total=5500.0, vat_rate=0.20, vat_amount=1100.0, gross_total=6600.0,
+            payment_terms="14 Tage", language="de",
+        )
+        mock_quote.return_value = (q, 200, 100)
+        # Correction LLM returns a delivery_date patch so compliance passes on second try
+        mock_correction_llm.return_value = (
+            json.dumps({"delivery_date": "2025-05-30", "service_period_from": None,
+                        "service_period_to": None, "recipient_name": None,
+                        "recipient_address_line1": None, "recipient_address_line2": None,
+                        "recipient_uid": None}),
+            None, None,
+        )
+        mock_render.return_value = b"fake-pdf"
         mock_profile.return_value = _make_profile()
         mock_clients.return_value = [_CLIENT]
 
         g = build_graph()
         config = {"configurable": {"thread_id": "test-happy-2"}}
 
-        g.invoke(initial_state("ERP Beratung Muster GmbH 5 Tage à 1100 Euro, Termin 15. Mai 2025"), config=config)
+        g.invoke(initial_state("ERP Beratung Muster GmbH 5 Tage"), config=config)
 
-        # Resume with approval
         final = g.invoke(
             Command(resume={"status": "approved", "feedback": None}),
             config=config,
         )
         assert final is not None
-        # Compliance check should have run — compliance_result is set
         assert final.get("compliance_result") is not None
 
 
@@ -353,21 +452,8 @@ class TestGraphHappyPath:
 class TestCorrectionLoop:
     """Verify correction loop runs at most twice and then terminates."""
 
-    @patch("agent.graph._call_correction_llm")
-    @patch("agent.graph._get_profile")
-    def test_correction_called_at_most_twice(self, mock_profile, mock_correction_llm):
-        mock_profile.return_value = _make_profile()
-        # Correction LLM returns all-null patch (no fix possible) both times
-        mock_correction_llm.return_value = (json.dumps({
-            k: None for k in (
-                "delivery_date", "service_period_from", "service_period_to",
-                "recipient_name", "recipient_address_line1", "recipient_address_line2", "recipient_uid",
-            )
-        }), None, None)
-
-        # Build a failing invoice (no delivery date) and run just the compliance sub-graph
-        # by testing the router directly at correction_attempts=2
-        from langgraph.graph import END
+    def test_correction_loop_exhausts_to_compliance_clarify_for_user_fixable_failures(self):
+        # delivery_date is clarifiable — loop hands off to the interrupt node, not END
         failing_result = ComplianceResult(
             passed=False,
             failures=[ComplianceFailure(field="delivery_date", reason="missing")],
@@ -377,16 +463,20 @@ class TestCorrectionLoop:
             "compliance_result": failing_result.model_dump(mode="json"),
             "correction_attempts": 2,
         }
-        assert route_after_compliance(s) == END
+        assert route_after_compliance(s) == "node_compliance_clarify"
 
     def test_correction_loop_increments_counter(self):
-        from langgraph.graph import END as _END
+        # delivery_date: 0 → correct, 1 → correct, 2 → compliance_clarify (clarifiable)
         failing = ComplianceResult(
             passed=False,
             failures=[ComplianceFailure(field="delivery_date", reason="missing")],
         ).model_dump(mode="json")
 
-        for attempts, expected in [(0, "node_correct_compliance"), (1, "node_correct_compliance"), (2, _END)]:
+        for attempts, expected in [
+            (0, "node_correct_compliance"),
+            (1, "node_correct_compliance"),
+            (2, "node_compliance_clarify"),
+        ]:
             s = {**initial_state("x"), "compliance_result": failing, "correction_attempts": attempts}
             assert route_after_compliance(s) == expected
 

@@ -54,6 +54,14 @@
       <p id="errorMsg" class="error-msg"></p>
     </section>
 
+    <section class="card" id="clarificationSection" hidden>
+      <p id="clarificationMsg" class="status-msg"></p>
+      <div id="clarificationInputs" class="clarification-inputs"></div>
+      <div class="action-row">
+        <button id="clarifyBtn" class="primary" data-i18n="clarifyBtn"></button>
+      </div>
+    </section>
+
     <section class="card" id="quoteSection" hidden>
       <h2><span data-i18n="quoteHeading"></span> — <span id="clientName"></span></h2>
       <div class="card-scroll"><table id="quoteTable">
@@ -108,6 +116,12 @@
 
         <label for="pBic"      data-i18n="pBic"></label>
         <input id="pBic"       type="text" name="bank_bic" />
+
+        <label for="pLaborHourly" data-i18n="pLaborHourly"></label>
+        <input id="pLaborHourly" type="number" step="0.01" min="0" name="labor_hourly" placeholder="0.00" />
+
+        <label for="pLaborDaily"  data-i18n="pLaborDaily"></label>
+        <input id="pLaborDaily"  type="number" step="0.01" min="0" name="labor_daily"  placeholder="0.00" />
 
         <label for="pColor"    data-i18n="pColor"></label>
         <div class="color-row">

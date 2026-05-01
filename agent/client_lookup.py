@@ -27,13 +27,15 @@ def lookup_client(
     # Each client contributes its canonical name + all short_names as candidates.
     # We keep a parallel index so we can map winner back to the ClientRecord.
     candidates: list[str] = []
+    candidates_lower: list[str] = []
     index: list[ClientRecord] = []
     for client in clients:
         for label in [client.name] + client.short_names:
             candidates.append(label)
+            candidates_lower.append(label.lower())
             index.append(client)
 
-    result = process.extractOne(ref, candidates, scorer=fuzz.token_sort_ratio)
+    result = process.extractOne(ref.lower(), candidates_lower, scorer=fuzz.token_sort_ratio)
     if result is None or result[1] < threshold:
         return None
 

@@ -1,7 +1,7 @@
 """Canned observability queries for the DocAssist SQLite store.
 
 Usage:
-    python scripts/query.py --report          # full report
+    .venv/Scripts/python -m scripts/query.py --report          # full report
     python scripts/query.py --latency         # p95 latency per node
     python scripts/query.py --cost            # avg cost per document
     python scripts/query.py --compliance      # compliance pass rate

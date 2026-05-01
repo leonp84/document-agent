@@ -19,15 +19,21 @@ def init_jobs_db(db_path: Path = _DEFAULT_DB) -> None:
     with conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS jobs (
-                request_id   TEXT PRIMARY KEY,
-                status       TEXT NOT NULL,
-                quote_json   TEXT,
-                pdf_bytes    BLOB,
-                error        TEXT,
-                created_at   REAL NOT NULL,
-                updated_at   REAL NOT NULL
+                request_id         TEXT PRIMARY KEY,
+                status             TEXT NOT NULL,
+                quote_json         TEXT,
+                clarification_json TEXT,
+                pdf_bytes          BLOB,
+                error              TEXT,
+                created_at         REAL NOT NULL,
+                updated_at         REAL NOT NULL
             )
         """)
+        # Migrate existing tables that predate the clarification column.
+        try:
+            conn.execute("ALTER TABLE jobs ADD COLUMN clarification_json TEXT")
+        except Exception:
+            pass
     conn.close()
 
 
@@ -60,6 +66,7 @@ def update_job(
     *,
     status: str | None = None,
     quote_json: str | None = None,
+    clarification_json: str | None = None,
     pdf_bytes: bytes | None = None,
     error: str | None = None,
     db_path: Path = _DEFAULT_DB,
@@ -73,6 +80,9 @@ def update_job(
     if quote_json is not None:
         fields.append("quote_json = ?")
         values.append(quote_json)
+    if clarification_json is not None:
+        fields.append("clarification_json = ?")
+        values.append(clarification_json)
     if pdf_bytes is not None:
         fields.append("pdf_bytes = ?")
         values.append(pdf_bytes)

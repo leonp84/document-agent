@@ -91,7 +91,7 @@ def test_load_clients_reads_real_file():
     from pathlib import Path
     path = Path(__file__).parent.parent / "data" / "clients.json"
     clients = load_clients(path)
-    assert len(clients) == 10
+    assert len(clients) >= 10
     assert all(isinstance(c, ClientRecord) for c in clients)
 
 

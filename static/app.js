@@ -31,6 +31,17 @@ const T = {
     errNetwork:      'Netzwerkfehler',
     errFailed:       'Verarbeitung fehlgeschlagen.',
     errInvoice:      'Fehler beim Erstellen der Rechnung',
+    clarifyBtn:      'Bestätigen',
+    clarifyPlaceholder: 'z. B. 20 Reinigungsstunden für Pichler GmbH à €25/Std.',
+    clarifyRatePlaceholder: '0.00',
+    clarificationMsg_scope_clarification:       'Die Auftragsbeschreibung ist zu vage. Bitte beschreiben Sie die Leistungen, Mengen und den Kundennamen.',
+    clarificationMsg_rate_clarification:        'Für folgende Leistungen ist kein Preis hinterlegt. Bitte geben Sie je einen Preis (€) an:',
+    clarificationMsg_compliance_clarification:  'Die Rechnung konnte nicht automatisch vervollständigt werden. Bitte ergänzen Sie die fehlenden Angaben:',
+    complianceField_delivery_date:          'Leistungsdatum',
+    complianceField_recipient_uid:          'UID-Nr. des Empfängers',
+    complianceField_recipient_name:         'Name des Empfängers',
+    complianceField_recipient_address_line1:'Adresse Zeile 1',
+    complianceField_recipient_address_line2:'PLZ / Ort',
     filePrefix:      'rechnung',
     profileTitle:    'Firmeninformationen',
     pName:           'Firma',
@@ -39,6 +50,8 @@ const T = {
     pUid:            'UID-Nr.',
     pIban:           'IBAN',
     pBic:            'BIC',
+    pLaborHourly:    'Stundensatz (€)',
+    pLaborDaily:     'Tagessatz (€)',
     pColor:          'Markenfarbe',
     profileHint:     'Änderungen gelten nur für diese Sitzung — nichts wird gespeichert.',
     profileSave:     'Übernehmen',
@@ -76,6 +89,17 @@ const T = {
     errNetwork:      'Network error',
     errFailed:       'Processing failed.',
     errInvoice:      'Error generating invoice',
+    clarifyBtn:      'Confirm',
+    clarifyPlaceholder: 'e.g. 20 cleaning hours for Pichler GmbH at €25/h.',
+    clarifyRatePlaceholder: '0.00',
+    clarificationMsg_scope_clarification:       'The job description is too vague to generate a quote. Please describe the specific services, quantities, and client name.',
+    clarificationMsg_rate_clarification:        'The following services have no configured rate. Please provide a price (€) for each:',
+    clarificationMsg_compliance_clarification:  'The invoice cannot be completed automatically. Please provide the missing information:',
+    complianceField_delivery_date:          'Date of service',
+    complianceField_recipient_uid:          'Recipient VAT number',
+    complianceField_recipient_name:         'Recipient name',
+    complianceField_recipient_address_line1:'Address line 1',
+    complianceField_recipient_address_line2:'ZIP / City',
     filePrefix:      'invoice',
     profileTitle:    'Business Information',
     pName:           'Company Name',
@@ -84,6 +108,8 @@ const T = {
     pUid:            'VAT No.',
     pIban:           'IBAN',
     pBic:            'BIC',
+    pLaborHourly:    'Hourly rate (€)',
+    pLaborDaily:     'Daily rate (€)',
     pColor:          'Brand Colour',
     profileHint:     'Changes apply to this session only — nothing is saved permanently.',
     profileSave:     'Apply',
@@ -102,6 +128,8 @@ let embeddedKey = '';
 let currentRequestId = null;
 let pollTimer = null;
 let currentVatRate = null;
+let currentClarificationType = null;
+let isInvoicePhase = false;
 
 // ── DOM refs ─────────────────────────────────────────────────────────────────
 
@@ -119,6 +147,11 @@ const langEn        = document.getElementById('langEn');
 const clientsToggleBtn = document.getElementById('clientsToggleBtn');
 const clientsPanel     = document.getElementById('clientsPanel');
 const clientsBody      = document.getElementById('clientsBody');
+const clarificationSection = document.getElementById('clarificationSection');
+const clarificationMsg     = document.getElementById('clarificationMsg');
+const clarificationInputs  = document.getElementById('clarificationInputs');
+const clarifyBtn           = document.getElementById('clarifyBtn');
+
 const profileModal  = document.getElementById('profileModal');
 const profileForm   = document.getElementById('profileForm');
 const profileCancel = document.getElementById('profileCancel');
@@ -199,6 +232,10 @@ function populateProfileForm(data) {
     const el = profileForm.elements[k];
     if (el && data[k] != null) el.value = data[k];
   });
+  ['labor_hourly', 'labor_daily'].forEach(k => {
+    const el = profileForm.elements[k];
+    if (el && data[k] != null) el.value = data[k];
+  });
   if (data.brand_color) {
     pColorInput.value = data.brand_color;
     pColorHex.value   = data.brand_color;
@@ -232,6 +269,10 @@ profileForm.addEventListener('submit', () => {
     const v = profileForm.elements[k]?.value.trim();
     if (v) override[k] = v;
   });
+  ['labor_hourly', 'labor_daily'].forEach(k => {
+    const v = profileForm.elements[k]?.value;
+    if (v !== '' && v != null) override[k] = parseFloat(v);
+  });
   if (pColorHex.value) override.brand_color = pColorHex.value;
   localStorage.setItem(PROFILE_KEY, JSON.stringify(override));
 });
@@ -264,13 +305,25 @@ function stopPolling() { clearInterval(pollTimer); pollTimer = null; }
 
 function fmt(n) { return `€ ${n.toFixed(2)}`; }
 
+const _UNIT_EN = { Stunden: 'hours', Tage: 'days', pauschal: 'flat rate' };
+function fmtUnit(unit) {
+  if (!unit) return '—';
+  return lang === 'en' ? (_UNIT_EN[unit] || unit) : unit;
+}
+
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function reset() { stopPolling(); submitBtn.disabled = false; }
+function reset() {
+  stopPolling();
+  submitBtn.disabled = false;
+  clarificationSection.hidden = true;
+  currentClarificationType = null;
+  isInvoicePhase = false;
+}
 
 // ── Submit quote ──────────────────────────────────────────────────────────────
 
@@ -281,15 +334,27 @@ submitBtn.addEventListener('click', async () => {
 
   clearError();
   quoteSection.hidden = true;
+  clarificationSection.hidden = true;
+  currentClarificationType = null;
   showStatus(t('statusCreating'));
   submitBtn.disabled = true;
 
   let data;
   try {
+    const override = profileOverride() || {};
+    const rate_overrides = {};
+    ['labor_hourly', 'labor_daily'].forEach(k => {
+      if (override[k] != null) rate_overrides[k] = override[k];
+    });
+
     const res = await fetch('/quote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': embeddedKey },
-      body: JSON.stringify({ raw_input: raw, language: lang }),
+      body: JSON.stringify({
+        raw_input: raw,
+        language: lang,
+        rate_overrides: Object.keys(rate_overrides).length ? rate_overrides : null,
+      }),
     });
     if (res.status === 401) { showError(t('err401')); reset(); return; }
     if (res.status === 429) { showError(t('err429')); reset(); return; }
@@ -317,8 +382,13 @@ async function pollStatus() {
     data = await res.json();
   } catch (_) { return; }
 
-  if (data.status === 'queued' || data.status === 'running') {
-    showStatus(t('statusCreating'));
+  if (data.status === 'queued' || data.status === 'running' || data.status === 'pending') {
+    showStatus(t(isInvoicePhase ? 'statusInvoice' : 'statusCreating'));
+  } else if (data.status === 'awaiting_clarification') {
+    stopPolling();
+    hideStatus();
+    renderClarification(data.clarification);
+    submitBtn.disabled = false;
   } else if (data.status === 'awaiting_approval') {
     stopPolling();
     hideStatus();
@@ -331,8 +401,13 @@ async function pollStatus() {
     reset();
   } else if (data.status === 'completed') {
     stopPolling();
-    showStatus(t('statusCompleted'), false);
-    submitBtn.disabled = false;
+    if (isInvoicePhase) {
+      isInvoicePhase = false;
+      await downloadInvoicePdf();
+    } else {
+      showStatus(t('statusCompleted'), false);
+      submitBtn.disabled = false;
+    }
   }
 }
 
@@ -347,7 +422,7 @@ function renderQuote(quote) {
     tr.innerHTML = `
       <td>${escHtml(item.description)}</td>
       <td class="num">${item.qty}</td>
-      <td>${escHtml(item.unit || '—')}</td>
+      <td>${escHtml(fmtUnit(item.unit))}</td>
       <td class="num">${fmt(item.rate)}</td>
       <td class="num">${fmt(item.amount)}</td>
     `;
@@ -372,14 +447,153 @@ function renderQuote(quote) {
   quoteSection.hidden = false;
 }
 
+// ── PDF download helper ───────────────────────────────────────────────────────
+
+async function downloadInvoicePdf() {
+  try {
+    const res = await fetch(`/pdf/${currentRequestId}`, {
+      headers: { 'X-API-Key': embeddedKey },
+    });
+    if (!res.ok) { showError(`${t('errInvoice')}: ${res.status}`); reset(); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${t('filePrefix')}-${currentRequestId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    showError(`${t('errNetwork')}: ${err.message}`);
+    reset();
+    return;
+  }
+
+  hideStatus();
+  quoteSection.hidden = true;
+  showStatus(t('statusDone'), false);
+  currentRequestId = null;
+  currentVatRate = null;
+  submitBtn.disabled = false;
+  freigebenBtn.disabled = false;
+}
+
+// ── Render clarification prompt ───────────────────────────────────────────────
+
+function renderClarification(clarification) {
+  if (!clarification) return;
+  currentClarificationType = clarification.type;
+
+  clarificationMsg.textContent = t(`clarificationMsg_${clarification.type}`) || clarification.message;
+  clarificationInputs.innerHTML = '';
+
+  if (clarification.type === 'scope_clarification') {
+    const ta = document.createElement('textarea');
+    ta.id = 'clarifyText';
+    ta.rows = 4;
+    ta.placeholder = t('clarifyPlaceholder');
+    ta.value = clarification.original_input || '';
+    ta.style.marginTop = '0.5rem';
+    clarificationInputs.appendChild(ta);
+  } else if (clarification.type === 'rate_clarification') {
+    for (const svc of (clarification.services || [])) {
+      const row = document.createElement('div');
+      row.className = 'clarification-rate-row';
+      const lbl = document.createElement('label');
+      lbl.textContent = `${svc} (€)`;
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.step = '0.01';
+      inp.min = '0';
+      inp.placeholder = t('clarifyRatePlaceholder');
+      inp.dataset.service = svc;
+      row.appendChild(lbl);
+      row.appendChild(inp);
+      clarificationInputs.appendChild(row);
+    }
+  } else if (clarification.type === 'compliance_clarification') {
+    for (const field of (clarification.fields || [])) {
+      const row = document.createElement('div');
+      row.className = 'clarification-rate-row';
+      const lbl = document.createElement('label');
+      lbl.textContent = t(`complianceField_${field.name}`) || field.name;
+      const inp = document.createElement('input');
+      inp.type = field.input_type === 'date' ? 'date' : 'text';
+      if (field.placeholder) inp.placeholder = field.placeholder;
+      inp.dataset.field = field.name;
+      inp.dataset.inputType = field.input_type;
+      row.appendChild(lbl);
+      row.appendChild(inp);
+      clarificationInputs.appendChild(row);
+    }
+  }
+
+  clarifyBtn.disabled = false;
+  clarificationSection.hidden = false;
+}
+
+// ── Clarification submit ──────────────────────────────────────────────────────
+
+clarifyBtn.addEventListener('click', async () => {
+  if (!embeddedKey) { showError(t('errNoKey')); return; }
+
+  let body = {};
+
+  if (currentClarificationType === 'scope_clarification') {
+    const text = document.getElementById('clarifyText')?.value?.trim();
+    if (!text) { showError(t('errNoInput')); return; }
+    body = { clarified_input: text };
+  } else if (currentClarificationType === 'rate_clarification') {
+    const rates = {};
+    clarificationInputs.querySelectorAll('input[type="number"]').forEach(inp => {
+      if (inp.dataset.service && inp.value !== '') {
+        rates[inp.dataset.service] = parseFloat(inp.value);
+      }
+    });
+    body = { rates };
+  } else {
+    // compliance_clarification
+    const compliance_data = {};
+    clarificationInputs.querySelectorAll('input[data-field]').forEach(inp => {
+      if (inp.dataset.field && inp.value !== '') {
+        compliance_data[inp.dataset.field] = inp.value;
+      }
+    });
+    body = { compliance_data };
+  }
+
+  clarifyBtn.disabled = true;
+  clarificationSection.hidden = true;
+  currentClarificationType = null;
+  clearError();
+  showStatus(t('statusCreating'));
+
+  try {
+    const res = await fetch(`/clarify/${currentRequestId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': embeddedKey },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 401) { showError(t('err401')); reset(); return; }
+    if (!res.ok) { showError(`${t('errServer')}: ${res.status}`); reset(); return; }
+  } catch (err) {
+    showError(`${t('errNetwork')}: ${err.message}`);
+    reset();
+    return;
+  }
+
+  pollTimer = setInterval(pollStatus, 2000);
+});
+
 // ── Freigeben → PDF download ──────────────────────────────────────────────────
 
 freigebenBtn.addEventListener('click', async () => {
+  if (!embeddedKey) { showError(t('errNoKey')); return; }
   freigebenBtn.disabled = true;
   clearError();
   showStatus(t('statusInvoice'));
 
-  let blob;
   try {
     const res = await fetch(`/invoice/${currentRequestId}`, {
       method: 'POST',
@@ -388,7 +602,6 @@ freigebenBtn.addEventListener('click', async () => {
     });
     if (res.status === 401) { showError(t('err401')); hideStatus(); freigebenBtn.disabled = false; return; }
     if (!res.ok) { showError(`${t('errInvoice')}: ${res.status}`); hideStatus(); freigebenBtn.disabled = false; return; }
-    blob = await res.blob();
   } catch (err) {
     showError(`${t('errNetwork')}: ${err.message}`);
     hideStatus();
@@ -396,23 +609,10 @@ freigebenBtn.addEventListener('click', async () => {
     return;
   }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${t('filePrefix')}-${currentRequestId}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  hideStatus();
-  quoteSection.hidden = true;
-  showStatus(t('statusDone'), false);
-
-  currentRequestId = null;
-  currentVatRate = null;
-  submitBtn.disabled = false;
-  freigebenBtn.disabled = false;
+  // Graph is now running as a background task — poll for completion.
+  // pollStatus handles: running → awaiting_clarification (compliance gap) or completed → PDF download.
+  isInvoicePhase = true;
+  pollTimer = setInterval(pollStatus, 2000);
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────

@@ -70,10 +70,19 @@ def _call_openai(system: str, user: str) -> tuple[str, int | None, int | None]:
     )
 
 
-def _call_anthropic(system: str, user: str) -> tuple[str, int | None, int | None]:
-    from anthropic import Anthropic
+_anthropic_client = None
 
-    client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+def _get_anthropic_client():
+    global _anthropic_client
+    if _anthropic_client is None:
+        from anthropic import Anthropic
+        _anthropic_client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    return _anthropic_client
+
+
+def _call_anthropic(system: str, user: str) -> tuple[str, int | None, int | None]:
+    client = _get_anthropic_client()
     response = client.messages.create(
         model=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
         max_tokens=512,

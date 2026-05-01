@@ -32,6 +32,10 @@ COPY data/clients.json data/clients.json
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
+ENV LANGCHAIN_ENDPOINT=https://eu.api.smith.langchain.com \
+    LANGCHAIN_TRACING_V2=true \
+    LANGCHAIN_PROJECT=docassist
+
 EXPOSE 8080
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
