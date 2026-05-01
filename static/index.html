@@ -17,9 +17,12 @@
       <h1><img src="at-flag.svg" alt="AT" class="flag" /> DocAssist<span id="headerTagline"> – <span id="headerTaglineText"></span></span></h1>
       <p class="subtitle" data-i18n="subtitle"></p>
     </div>
-    <div class="lang-switcher">
-      <button id="langDe" class="lang-btn active">DE</button>
-      <button id="langEn" class="lang-btn">EN</button>
+    <div class="header-controls">
+      <button id="techInfoBtn" class="tech-info-btn">Technical Info</button>
+      <div class="lang-switcher">
+        <button id="langDe" class="lang-btn active">DE</button>
+        <button id="langEn" class="lang-btn">EN</button>
+      </div>
     </div>
   </header>
 
@@ -47,7 +50,6 @@
 
     <section class="card" id="statusSection" hidden>
       <p id="statusMsg" class="status-msg"></p>
-      <div class="spinner"></div>
     </section>
 
     <section class="card" id="errorSection" hidden>
@@ -137,6 +139,85 @@
     </form>
   </dialog>
 
+  <dialog id="loadingModal">
+    <div id="lottieContainer"></div>
+    <p id="loadingText"></p>
+  </dialog>
+
+  <dialog id="techInfoModal">
+    <div class="tech-modal-header">
+      <h2>Technical Architecture</h2>
+      <button id="techInfoClose" class="tech-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div class="tech-modal-body">
+      <p class="tech-modal-intro">DocAssist is built to production standards — evaluated before optimised, cost-profiled, and deployed with structured observability. A summary for technical reviewers.</p>
+      <div class="tech-grid">
+
+        <div class="tech-section">
+          <h3>LangGraph Stateful Pipeline</h3>
+          <ul>
+            <li>10-node directed graph with <strong>4 interrupt gates</strong> — scope, rate, and compliance clarification plus human review</li>
+            <li>Full state checkpointed to SQLite; graph suspends and resumes across HTTP requests, hours apart if needed</li>
+            <li>Human-in-the-loop is structural — the graph cannot produce an invoice without an explicit owner approval</li>
+          </ul>
+        </div>
+
+        <div class="tech-section">
+          <h3>Eval-First Development</h3>
+          <ul>
+            <li>Eval harness committed before any LLM code (test-first approach)</li>
+            <li>3 layers: deterministic tests (§11 field presence, VAT arithmetic, UID regex), <strong>24 annotated gold pairs</strong> (8 per industry), adversarial cases (vague input must trigger clarification, not hallucinate)</li>
+            <li><strong>26/28 tests green</strong> — 100% of active tests passing; 2 xfailed stubs</li>
+          </ul>
+        </div>
+
+        <div class="tech-section">
+          <h3>Model Selection — Own Numbers</h3>
+          <ul>
+            <li>Haiku, Sonnet, and 3 local models (gpt-oss-20b, Gemma-4-26B, Qwen2.5-14B) benchmarked on extraction F1</li>
+            <li>Haiku chosen: <strong>F1 0.94</strong>, 35s/24 pairs — identical to Sonnet at half the latency</li>
+            <li>Quote generation: Haiku <strong>€0.0008/doc</strong> vs Sonnet €0.0029/doc — 3.6× cheaper, indistinguishable output length</li>
+          </ul>
+        </div>
+
+        <div class="tech-section">
+          <h3>Deterministic Compliance Engine</h3>
+          <ul>
+            <li>§11 UStG rules engine checks all <strong>11 required invoice fields</strong> — LLM never touches the legal requirements path</li>
+            <li>Field list verified against <strong>ebInterface 6.1 XSD</strong>, the Austrian Chamber of Commerce's machine-readable invoice standard</li>
+            <li>Haiku correction loop capped at 2 retries; non-compliant document is never returned</li>
+          </ul>
+        </div>
+
+        <div class="tech-section">
+          <h3>Prompts as Versioned Code</h3>
+          <ul>
+            <li>Prompts in <code>/prompts/{node}/v{n}.md</code>, version pinned per node in <code>models.yaml</code></li>
+            <li>CHANGELOG tracks version → eval metric delta → rationale; extraction went through 3 versions</li>
+            <li>Swapping model or prompt version is a one-line config change — no code change required</li>
+          </ul>
+        </div>
+
+        <div class="tech-section">
+          <h3>Observability &amp; Cost</h3>
+          <ul>
+            <li>Per-node SQLite logging: latency, model, input/output tokens, cost (EUR) — canned ops queries included</li>
+            <li>LangSmith tracing per request (EU endpoint, <code>europe-west3</code>)</li>
+            <li>Full pipeline profiled: <strong>€0.007 avg/doc</strong>, <strong>4.1s p50</strong> end-to-end — well under €0.10 target</li>
+          </ul>
+        </div>
+
+      </div>
+      <img src="docassist_flowchart.png" alt="DocAssist LangGraph pipeline" class="tech-flowchart" />
+
+      <div class="tech-modal-footer">
+        <a href="https://github.com/leonp84/document-agent" target="_blank" rel="noopener">GitHub →</a>
+        <span>Cloud Run europe-west3 · FastAPI · X-API-Key auth · Rate limited</span>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

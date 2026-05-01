@@ -131,6 +131,17 @@ let currentVatRate = null;
 let currentClarificationType = null;
 let isInvoicePhase = false;
 
+const LOADING_MSGS = {
+  de: {
+    quote:   ['Bereite Ihr Angebot vor', 'Analysiere die Anfrage', 'Stelle Ihr Angebot zusammen', 'Prüfe die Zahlen', 'Fast fertig mit Ihrem Angebot'],
+    invoice: ['Bereite Ihre Rechnung vor', 'Stelle Ihre Rechnung zusammen', 'Fertigstellung Ihrer Rechnung', 'Letzte Feinheiten', 'Gleich fertig mit Ihrer Rechnung'],
+  },
+  en: {
+    quote:   ['Getting your quote ready', 'Analysing your job description', 'Building your quote', 'Checking the numbers', 'Almost done with your quote'],
+    invoice: ['Getting your invoice ready', 'Putting your invoice together', 'Wrapping up your invoice', 'Polishing your invoice', 'Almost done with your invoice'],
+  },
+};
+
 // ── DOM refs ─────────────────────────────────────────────────────────────────
 
 const rawInput      = document.getElementById('rawInput');
@@ -155,6 +166,14 @@ const clarifyBtn           = document.getElementById('clarifyBtn');
 const profileModal  = document.getElementById('profileModal');
 const profileForm   = document.getElementById('profileForm');
 const profileCancel = document.getElementById('profileCancel');
+
+const techInfoBtn   = document.getElementById('techInfoBtn');
+const techInfoModal = document.getElementById('techInfoModal');
+const techInfoClose = document.getElementById('techInfoClose');
+
+const loadingModal    = document.getElementById('loadingModal');
+const lottieContainer = document.getElementById('lottieContainer');
+const loadingText     = document.getElementById('loadingText');
 const pColorInput   = document.getElementById('pColor');
 const pColorHex     = document.getElementById('pColorHex');
 
@@ -257,6 +276,9 @@ profileBtn.addEventListener('click', async () => {
 
 profileCancel.addEventListener('click', () => profileModal.close());
 
+techInfoBtn.addEventListener('click', () => techInfoModal.showModal());
+techInfoClose.addEventListener('click', () => techInfoModal.close());
+
 // Keep colour picker and hex input in sync
 pColorInput.addEventListener('input', () => { pColorHex.value = pColorInput.value; });
 pColorHex.addEventListener('input', () => {
@@ -294,12 +316,55 @@ function showError(msg) {
 }
 function clearError() { errorSection.hidden = true; }
 
-function showStatus(msg, spinner = true) {
-  statusMsg.textContent = msg;
-  statusSection.querySelector('.spinner').hidden = !spinner;
-  statusSection.hidden = false;
+// ── Lottie loading modal ──────────────────────────────────────────────────────
+
+let _lottieAnim = null;
+let _rotateTimer = null;
+
+function _initLottie() {
+  if (_lottieAnim) return;
+  _lottieAnim = lottie.loadAnimation({
+    container: lottieContainer,
+    renderer: 'svg',
+    loop: true,
+    autoplay: false,
+    path: '/file_search_animation.json',
+  });
 }
-function hideStatus() { statusSection.hidden = true; }
+
+function startLoadingModal(isInvoice) {
+  _initLottie();
+  const msgs = LOADING_MSGS[lang][isInvoice ? 'invoice' : 'quote'];
+  loadingText.classList.remove('fading');
+  loadingText.textContent = msgs[0];
+  _lottieAnim.goToAndPlay(0, true);
+  loadingModal.showModal();
+}
+
+function stopLoadingModal() {
+  clearInterval(_rotateTimer);
+  if (_lottieAnim) _lottieAnim.stop();
+  if (loadingModal.open) loadingModal.close();
+}
+
+loadingModal.addEventListener('cancel', e => e.preventDefault());
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function showStatus(msg, spinner = true) {
+  if (spinner) {
+    statusSection.hidden = true;
+    startLoadingModal(isInvoicePhase);
+  } else {
+    stopLoadingModal();
+    statusMsg.textContent = msg;
+    statusSection.hidden = false;
+  }
+}
+function hideStatus() {
+  stopLoadingModal();
+  statusSection.hidden = true;
+}
 
 function stopPolling() { clearInterval(pollTimer); pollTimer = null; }
 

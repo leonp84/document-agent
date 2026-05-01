@@ -232,7 +232,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
         return result
 
     @app.post("/quote", response_model=QuoteResponse, dependencies=[Depends(_require_api_key)])
-    @limiter.limit("5/day")
+    @limiter.limit(os.getenv("DOCASSIST_RATE_LIMIT", "5/day"))
     async def post_quote(
         request: Request,
         body: QuoteRequest,

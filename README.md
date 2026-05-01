@@ -6,7 +6,7 @@
 
 ## The Problem
 
-An Austrian SME owner without ERP or accounting software — carpenter, cleanner, business advisor — spends ca. 15-30 unbillable minutes on every quote and invoice. They open a Word template, type line items, calculate totals, add bank details, check the layout. They do this for every job, every week.
+An Austrian SME owner without ERP or accounting software — carpenter, cleaner, business advisor — spends ca. 15-30 unbillable minutes on every quote and invoice. They open a Word template, type line items, calculate totals, add bank details, check the layout. They do this for every job, every week.
 
 The work is not skilled. It is just slow.
 
@@ -24,13 +24,11 @@ Austrian sole trader or micro-business owner, under 10 employees, no accounting 
 
 | Metric | Target | Achieved |
 |---|---|---|
-| Quote generation time | < 30 seconds | — |
-| §11 UStG field compliance | 100% on every invoice | — |
-| Quote-to-invoice data entry | Zero additional input | — |
-| Owner time per document | < 5 minutes (review + send) | — |
-| Cost to serve | < €0.10 per document | — |
-
-*Achieved numbers filled in at project completion.*
+| Quote generation time | < 30 seconds | ~5s end-to-end (profiled) |
+| §11 UStG field compliance | 100% on every invoice | 100% — non-compliant document never returned |
+| Quote-to-invoice data entry | Zero additional input | Zero — deterministic mapping |
+| Owner time per document | < 5 minutes (review + send) | < 5 minutes — review draft, click Freigeben |
+| Cost to serve | < €0.10 per document | €0.007 avg (profiled, all-Haiku) |
 
 ---
 
@@ -95,17 +93,31 @@ Local API at `http://localhost:8000` — Swagger at `/docs`, health probe at `/h
 
 ## Eval Report
 
-*To be completed at project completion — will include extraction F1, compliance pass rate, LLM-as-judge quote quality scores, and Sonnet vs Haiku tradeoff numbers.*
+Pytest suite: **26/28 passing** (100% of active tests), 2 xfailed stub placeholders. See [`evals/scorecard.json`](evals/scorecard.json).
 
-See [`docs/eval_results.md`](docs/eval_results.md).
+| Metric | Result |
+|---|---|
+| Extraction client accuracy | 100% (24 gold pairs, all models) |
+| Extraction service F1 | 0.94 (Haiku, production model) |
+| Compliance precision | 100% on synthetic test set (known-good and known-bad invoices) |
+| Compliance pass rate (profiling) | 100% — correction loop + clarification ensures every document is compliant before delivery |
+
+Model comparison (Haiku vs Sonnet vs local): [`docs/tradeoffs.md`](docs/tradeoffs.md).
 
 ---
 
 ## Cost & Latency
 
-*To be completed — will include per-node breakdown, cost per document, and user-month estimates at 20 and 100 docs/month.*
+Profiled against 10 documents (all-Haiku and Sonnet-for-quote variants):
 
-See [`docs/cost_latency.md`](docs/cost_latency.md).
+| | All-Haiku | Sonnet quote generation |
+|---|---|---|
+| Avg cost/document | €0.007 | €0.009 |
+| p50 latency | 4.1s | 4.6s |
+| p95 latency | 8.2s | 6.6s |
+| Cost at 20 docs/month | €0.14 | €0.18 |
+
+Sonnet costs 30% more for quote generation with no observable quality difference on structured output. Full per-node breakdown: [`docs/cost_latency.md`](docs/cost_latency.md).
 
 ---
 
@@ -118,6 +130,18 @@ Invoice field requirements are derived from §11 UStG and cross-referenced again
 ## Failure Modes
 
 See [`docs/failure_modes.md`](docs/failure_modes.md) for documented failure modes and mitigations (hallucinated line items, wrong VAT rate, silent compliance failure, vague input, price fabrication, unknown client).
+
+---
+
+## Docs
+
+| Document | What it covers |
+|---|---|
+| [`docs/tradeoffs.md`](docs/tradeoffs.md) | Extraction model comparison — Haiku vs Sonnet vs local models (F1, latency, cost) |
+| [`docs/cost_latency.md`](docs/cost_latency.md) | Per-node latency and cost profile, Haiku vs Sonnet quote generation comparison, scale projections |
+| [`docs/failure_modes.md`](docs/failure_modes.md) | Six documented failure modes, mitigations, and known limitations |
+| [`docs/ruleset_rationale.md`](docs/ruleset_rationale.md) | §11 UStG field-by-field rationale, cross-referenced against ebInterface XSD |
+| [`evals/scorecard.json`](evals/scorecard.json) | Latest test suite results |
 
 ---
 

@@ -1,0 +1,192 @@
+{
+  "primary": {
+    "tag": "primary",
+    "run_at": "2026-05-01T10:57:51Z",
+    "request_ids": [
+      "987252f4-4f6a-4d92-9015-1c167f9b9c07",
+      "df1644b3-7ac8-421e-bd54-d3b31a4bb918",
+      "2d7dfc5b-9515-4d8d-b70f-981c2282a66e",
+      "b5e09a74-76e9-4b71-9b93-a86baa03b2fe",
+      "a4e13b49-37c9-4b87-a2f2-1f8c2da67c8c",
+      "3770b986-7830-436d-94cf-798cb1dd6743",
+      "394884bc-f6d2-45a3-bb1f-1eb369883ed8",
+      "900d7e1a-55dc-485f-b363-4e91b5502bdd",
+      "2be5ac3c-155f-47ea-85d3-bf5dfb237884",
+      "60c0a7e9-7778-4979-865b-7ddbdc50d15f"
+    ],
+    "inputs_run": 10,
+    "completed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "metrics": {
+      "nodes": {
+        "node_build_invoice": {
+          "calls": 10,
+          "avg_ms": 0.7,
+          "p50_ms": 0.7,
+          "p95_ms": 1.0,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        },
+        "node_check_compliance": {
+          "calls": 40,
+          "avg_ms": 0.0,
+          "p50_ms": 0.0,
+          "p95_ms": 0.1,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        },
+        "node_client_lookup": {
+          "calls": 10,
+          "avg_ms": 0.1,
+          "p50_ms": 0.1,
+          "p95_ms": 0.1,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        },
+        "node_correct_compliance": {
+          "calls": 20,
+          "avg_ms": 1325.5,
+          "p50_ms": 1038.2,
+          "p95_ms": 2527.2,
+          "avg_cost_eur": 0.002233,
+          "avg_in_tok": 2612,
+          "avg_out_tok": 84
+        },
+        "node_extract": {
+          "calls": 10,
+          "avg_ms": 1179.3,
+          "p50_ms": 1154.0,
+          "p95_ms": 1442.1,
+          "avg_cost_eur": 0.001646,
+          "avg_in_tok": 1529,
+          "avg_out_tok": 141
+        },
+        "node_generate_quote": {
+          "calls": 10,
+          "avg_ms": 881.7,
+          "p50_ms": 786.8,
+          "p95_ms": 1433.5,
+          "avg_cost_eur": 0.000791,
+          "avg_in_tok": 814,
+          "avg_out_tok": 52
+        },
+        "node_resolve_rates": {
+          "calls": 10,
+          "avg_ms": 0.0,
+          "p50_ms": 0.0,
+          "p95_ms": 0.1,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        }
+      },
+      "document": {
+        "doc_count": 10,
+        "avg_latency_ms": 4712.7,
+        "p50_latency_ms": 4115.1,
+        "p95_latency_ms": 8195.0,
+        "avg_cost_eur": 0.006903,
+        "p95_cost_eur": 0.007489
+      }
+    }
+  },
+  "sonnet-quote": {
+    "tag": "sonnet-quote",
+    "run_at": "2026-05-01T11:03:47Z",
+    "request_ids": [
+      "442916f2-e93a-4d9d-a6d8-db984fd258e0",
+      "3efa8aa3-3a59-4ee4-830b-3b54288e580e",
+      "ffc32d9c-a0f9-4237-b94c-002f1201be0a",
+      "afa5455b-f661-4200-9d36-5c70616b71ac",
+      "60ffd38a-edeb-409a-b27a-1ef83d4f5761",
+      "104d713a-6bc6-48cf-8952-8c10e7219a14",
+      "a5bb02f0-27c1-4093-acf7-d02483f7ae1d",
+      "2d19bc27-7134-4953-82bd-12b8ef8d503b",
+      "af4ac6b3-eb9b-4f1a-af7e-e63079b504ce",
+      "506be74d-d0a6-4bb3-a4fb-9a8bc2b12e64"
+    ],
+    "inputs_run": 10,
+    "completed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "metrics": {
+      "nodes": {
+        "node_build_invoice": {
+          "calls": 10,
+          "avg_ms": 0.7,
+          "p50_ms": 0.7,
+          "p95_ms": 0.8,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        },
+        "node_check_compliance": {
+          "calls": 40,
+          "avg_ms": 0.0,
+          "p50_ms": 0.0,
+          "p95_ms": 0.1,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        },
+        "node_client_lookup": {
+          "calls": 10,
+          "avg_ms": 0.1,
+          "p50_ms": 0.1,
+          "p95_ms": 0.3,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        },
+        "node_correct_compliance": {
+          "calls": 20,
+          "avg_ms": 1026.6,
+          "p50_ms": 1021.7,
+          "p95_ms": 1345.4,
+          "avg_cost_eur": 0.002233,
+          "avg_in_tok": 2612,
+          "avg_out_tok": 84
+        },
+        "node_extract": {
+          "calls": 10,
+          "avg_ms": 1346.4,
+          "p50_ms": 1217.3,
+          "p95_ms": 2576.9,
+          "avg_cost_eur": 0.001646,
+          "avg_in_tok": 1529,
+          "avg_out_tok": 141
+        },
+        "node_generate_quote": {
+          "calls": 10,
+          "avg_ms": 1410.5,
+          "p50_ms": 1390.7,
+          "p95_ms": 1797.6,
+          "avg_cost_eur": 0.002867,
+          "avg_in_tok": 815,
+          "avg_out_tok": 45
+        },
+        "node_resolve_rates": {
+          "calls": 10,
+          "avg_ms": 0.1,
+          "p50_ms": 0.0,
+          "p95_ms": 1.1,
+          "avg_cost_eur": null,
+          "avg_in_tok": null,
+          "avg_out_tok": null
+        }
+      },
+      "document": {
+        "doc_count": 10,
+        "avg_latency_ms": 4811.2,
+        "p50_latency_ms": 4574.2,
+        "p95_latency_ms": 6618.5,
+        "avg_cost_eur": 0.008979,
+        "p95_cost_eur": 0.009772
+      }
+    }
+  }
+}
