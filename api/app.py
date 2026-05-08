@@ -160,6 +160,20 @@ async def _resume_graph(
     await _handle_graph_result(graph, result, request_id, config, db_path)
 
 
+def _prewarm_anthropic() -> None:
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return
+    try:
+        from anthropic import Anthropic
+        Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"]).messages.create(
+            model=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001"),
+            max_tokens=1,
+            messages=[{"role": "user", "content": "."}],
+        )
+    except Exception:
+        pass
+
+
 def make_lifespan(db_path: Path):
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -171,6 +185,7 @@ def make_lifespan(db_path: Path):
         async with AsyncSqliteSaver.from_conn_string(str(db_path)) as checkpointer:
             app.state.graph = build_graph(checkpointer=checkpointer)
             app.state.db_path = db_path
+            await asyncio.to_thread(_prewarm_anthropic)
             yield
 
     return lifespan
