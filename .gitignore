@@ -264,3 +264,9 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all
 
 /.claude/settings.local.json
+/.claude/Other Docs/
+
+# Runtime SQLite (jobs + node_runs + langgraph checkpointer)
+data/docassist.db
+data/docassist.db-shm
+data/docassist.db-wal
