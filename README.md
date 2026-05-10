@@ -161,15 +161,18 @@ See [`docs/failure_modes.md`](docs/failure_modes.md) for documented failure mode
 ## Project Structure
 
 ```
-docassist/
-├── app/                   # FastAPI application
+document-agent/
+├── main.py                # uvicorn entry point
+├── api/                   # FastAPI application
 ├── agent/                 # LangGraph graph and nodes
 ├── prompts/               # Versioned prompt files
 ├── config/                # business_profile.yaml, models.yaml
 ├── data/                  # clients.json
+├── static/                # Frontend HTML, JS, CSS, icons
 ├── templates/             # Jinja2 invoice/quote templates (de/, en/)
+├── tests/                 # Unit tests
 ├── evals/                 # Eval harness and gold set
 │   └── gold/              # Annotated gold job description pairs
-├── scripts/               # eval.py, generate_gold_set.py
+├── scripts/               # eval.py, generate_gold_set.py, profile_pipeline.py
 └── docs/                  # tradeoffs.md, cost_latency.md, failure_modes.md
 ```
